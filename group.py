@@ -84,12 +84,12 @@ class Group:
             i = 0
 
             while True:
-                print i
+                print(i)
                 if positive[0][0] >= -negative[i][0]:
                     suggested_transfers.append((negative[i][1], positive[0][1], negative[i][0]))
                     tranfered = negative[i][0]
                     balance = positive[0][0] + tranfered
-                    print "balance %d" % balance
+                    print("balance %d" % balance)
                     if balance != 0:
                         positive.append((balance, positive[0][1]))
                     positive.pop(0)

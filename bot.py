@@ -57,7 +57,7 @@ def main():
 
     # CONSOLA
     while True:
-        inp = raw_input("")
+        inp = input("")
         if inp:
             input_c = inp.split()[0]
             args = inp.split()[1:]
@@ -70,7 +70,7 @@ def main():
                 break
 
             else:
-                print "Comando desconocido"
+                print("Comando desconocido")
 
 
 if __name__ == '__main__':

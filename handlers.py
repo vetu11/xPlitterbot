@@ -131,7 +131,7 @@ def select_transaction_type(bot, update, user_data):
 def message(bot, update, chat_data):
     # Se ejecuta cuando recibe un mensaje cualquiera que no haya pasado los filtros, sólo para debugging.
 
-    print update.effective_message.text
+    print(update.effective_message.text)
 
 
 # Inline buttons
@@ -223,7 +223,7 @@ def new_purchase_buyer(bot, update, user_data):
         purchase = transaction_manager.get_transaction_by_id(transaction_id)
         purchase.set_buyer(buyer_id)
     else:
-        print "wtf es %s" % cmd
+        print("wtf es %s" % cmd)
         return
 
     group = group_manager.get_group_by_id(purchase.group_id)
@@ -273,7 +273,7 @@ def new_purchase_participants(bot, update, user_data):
         purchase = transaction_manager.get_transaction_by_id(transaction_id)
         purchase.add_remove_participant(participant_id)
     else:
-        print "wtf es %s" % cmd
+        print("wtf es %s" % cmd)
         return
 
     group = group_manager.get_group_by_id(purchase.group_id)
