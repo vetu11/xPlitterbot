@@ -11,7 +11,7 @@ class _GroupManager:
     def __init__(self):
         self.group_dict = {}
 
-        with open("groups.json") as f:
+        with open("groups.json", encoding="utf-8") as f:
             crude_group_list = json.load(f)
 
         for crude_group in crude_group_list:
@@ -56,7 +56,7 @@ class _GroupManager:
         for group_id in self.group_dict:
             list.append(self.group_dict[group_id].__dict__)
 
-        with open("groups.json", "w") as f:
+        with open("groups.json", "w", encoding="utf-8") as f:
             json.dump(list, f)
 
     @staticmethod

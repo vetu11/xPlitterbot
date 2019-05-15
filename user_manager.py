@@ -10,7 +10,7 @@ class _UserManager:
     def __init__(self):
         self.user_dict = {}
 
-        with open("users.json") as f:
+        with open("users.json", encoding="utf-8") as f:
             crude_user_dict = json.load(f)
 
         for crude_user in crude_user_dict:
@@ -56,7 +56,7 @@ class _UserManager:
         for user_id in self.user_dict:
             list.append(self.user_dict[user_id].__dict__)
 
-        with open("users.json", "w") as f:
+        with open("users.json", "w", encoding="utf-8") as f:
             json.dump(list, f)
 
     @staticmethod

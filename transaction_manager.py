@@ -11,7 +11,7 @@ class _TransactionManager:
     def __init__(self):
         self.transaction_dict = {}
 
-        with open("transactions.json") as f:
+        with open("transactions.json", encoding="utf-8") as f:
             crude_transaction_list = json.load(f)
 
         for crude_transaction in crude_transaction_list:
@@ -63,7 +63,7 @@ class _TransactionManager:
         for transaction_id in self.transaction_dict:
             list.append(self.transaction_dict[transaction_id].__dict__)
 
-        with open("transactions.json", "w") as f:
+        with open("transactions.json", "w", encoding="utf-8") as f:
             json.dump(list, f)
 
     @staticmethod
