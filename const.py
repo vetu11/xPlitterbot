@@ -1,6 +1,8 @@
 # coding=utf-8
 # Descripcion: aquí se declaran variables constantes y otras variables útiles compartidas.
 
+VETU_ID = 254234845
+
 # Constantes de caducidad de los grupos
 CADUCIDAD_GRUPO = 7776000  # 3 meses en segundos
 REFRESH_RATE_GRUPO = 86400  # 1 día en segundos

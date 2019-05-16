@@ -38,16 +38,18 @@ def main():
     a(CommandHandler('more', h.more))
     a(CommandHandler('donate', h.donate))
     a(CommandHandler('add', h.add, filters=Filters.group, pass_chat_data=True, pass_user_data=True, pass_args=True))
+    a(CommandHandler('save', h.force_save))
     # MENSAJES
     a(MessageHandler(Filters.status_update.new_chat_members, h.new_members, pass_chat_data=True))
     a(RegexHandler(pattern=const.RE_AMOUNT_COMMENT_PATTERN, callback=h.select_transaction_type, pass_user_data=True))
     a(MessageHandler(Filters.text, h.message, pass_chat_data=True))
     # BOTONES
     a(CallbackQueryHandler(h.hi_button, pattern=r"hi_group$", pass_chat_data=True, pass_user_data=True))
-    a(CallbackQueryHandler(h.new_purchase_buyer, pattern="n_pur_bu_(sel|p)"))
+    a(CallbackQueryHandler(h.new_purchase_buyer, pattern="n_pur_bu_(sel|p)", pass_user_data=True))
     a(CallbackQueryHandler(h.new_purchase_participants, pattern="n_pur_pa_(sel|p)", pass_user_data=True))
     a(CallbackQueryHandler(h.new_purchase_resume, pattern="n_pur_res", pass_user_data=True))
     a(CallbackQueryHandler(h.new_purchase, pattern="n_pur", pass_user_data=True, pass_chat_data=True))
+    a(CallbackQueryHandler(h.new_transaction_cancel, pattern="n_trc_c", pass_user_data=True))
     a(CallbackQueryHandler(h.none, pattern=r"none\*"))
     # INLINE SHIT
     a(InlineQueryHandler(h.valid_inline_query, pass_user_data=True, pattern=r"\d+((\.|,)\d+)* (\w *)+"))

@@ -15,7 +15,7 @@ class _GroupManager:
             crude_group_list = json.load(f)
 
         for crude_group in crude_group_list:
-            self.group_dict[crude_group["id"]] = Group(**crude_group)
+            self.group_dict[crude_group["id"]] = Group(**dict(crude_group))
 
         self.check_groups_expiration_date()
 
@@ -54,10 +54,10 @@ class _GroupManager:
     def save(self):
         list = []
         for group_id in self.group_dict:
-            list.append(self.group_dict[group_id].__dict__)
+            list.append(self.group_dict[group_id].to_dict())
 
         with open("groups.json", "w", encoding="utf-8") as f:
-            json.dump(list, f)
+            json.dump(list, f, indent=2)
 
     @staticmethod
     def is_group(instance):

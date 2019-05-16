@@ -58,13 +58,17 @@ class _TransactionManager:
         self.transaction_dict[new_transaction.id] = new_transaction
         return new_transaction
 
+    # Permanently removes the transaction from the list.
+    def remove_transaction(self, transaction_id):
+        self.transaction_dict.pop(transaction_id)
+
     def save(self):
         list = []
         for transaction_id in self.transaction_dict:
-            list.append(self.transaction_dict[transaction_id].__dict__)
+            list.append(self.transaction_dict[transaction_id].to_dict())
 
         with open("transactions.json", "w", encoding="utf-8") as f:
-            json.dump(list, f)
+            json.dump(list, f, indent=2)
 
     @staticmethod
     def is_transaction(instance):

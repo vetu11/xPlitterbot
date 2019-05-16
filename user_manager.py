@@ -55,10 +55,10 @@ class _UserManager:
     def save(self):
         list = []
         for user_id in self.user_dict:
-            list.append(self.user_dict[user_id].__dict__)
+            list.append(self.user_dict[user_id].to_dict())
 
         with open("users.json", "w", encoding="utf-8") as f:
-            json.dump(list, f)
+            json.dump(list, f, indent=2)
 
     @staticmethod
     def is_user(instance):

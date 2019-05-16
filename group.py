@@ -12,7 +12,7 @@ class Group:
 
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")  # ID numerica del grupo, dada por Telegram.
-        self.user_list = kwargs.get("users", [])  # Lista de los participantes del grupo. Debe contener instantcias de
+        self.user_list = kwargs.get("user_list", [])  # Lista de los participantes del grupo. Debe contener instantcias de
                                                   # usuarios, si son strings se interpretarán como sus IDs.
         self.transaction_list = kwargs.get("transaction_list", [])  # Lo mismo de arriba pero con trasacciones.
         self.ledger = kwargs.get("ledger", {})  # Suma total de las deudas de cada usuario.
@@ -27,11 +27,17 @@ class Group:
             self.user_list = new_user_list
 
         # Conversión de ids a instancias de transacciones.
-        if self.transaction_list and isinstance(self.transaction_list, str):
+        if self.transaction_list and isinstance(self.transaction_list[0], str):
             new_transaction_list = []
             for transaction_id in self.transaction_list:
                 new_transaction_list.append(transaction_manager.get_transaction_by_id(transaction_id))
             self.transaction_list = new_transaction_list
+
+    def to_dict(self):
+        d = self.__dict__
+        d["user_list"] = [x.__repr__() for x in self.user_list]
+        d["transaction_list"] = [x.__repr__() for x in self.transaction_list]
+        return d
 
     def refresh_expiration_date(self):
         # Aumenta la fecha de caducidad de un grupo cuando se usa.

@@ -1,4 +1,5 @@
 {
+  "language_version": "0.1",
   "start": "Hola! Bienvenido!",
   "help": "Este es el mensaje de ayuda.",
   "more": "¡He hecho más bots!\n@Pilocobot es un juego picante para beber con tus amigos, o para conocer mejor a los nuevos en la fiesta",
@@ -36,6 +37,8 @@
   "select_buyer": "Bien, ahora confirma quién es el comprador:\n\n*Actual:* {buyer}",
   "select_participants": "Ahora es el turno de los particiapantes, selecciona entre quiénes se reparten los gastos.\n\n*Comprador:* {buyer}\n*Participantes:* {participants}",
   "new_purchase_resume": "La nueva compra ha sido registrada, *{amount}* monedos por \"{comment}\", lo compró {buyer} y se reparte entre {participants}.",
+  "new_purchase_resume_error_not_0": "Tiene que haber al menos 1 participante",
+  "transaction_canceled": "Se ha cancelado la transacción. ¿Quieres crear otra transacción para el mismo grupo?",
   "page": "Página {page}",
   "&": " y ",
   ",": ", ",

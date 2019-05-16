@@ -18,7 +18,7 @@ class User:
         self.first_name = kwargs.get("first_name")
         self.last_name = kwargs.get("last_name")
         self.username = kwargs.get("username")
-        self.id = kwargs.get("id")
+        self.id = int(kwargs.get("id"))
         self.language_code = kwargs.get("language_code", "ES-es")
         self.full_name = kwargs.get("full_name")
         self.full_name_simple = kwargs.get("full_name_simple")
@@ -35,7 +35,7 @@ class User:
         if self.full_name is None:
             self.create_full_name()
 
-        if self.transaction_list and isinstance(self.transaction_list, (str, unicode)):
+        if self.transaction_list and isinstance(self.transaction_list[0], str):
             new_transaction_list = []
             for transaction_id in self.transaction_list:
                 new_transaction_list.append(transaction_manager.get_transaction_by_id(transaction_id))
@@ -43,6 +43,11 @@ class User:
 
     def __repr__(self):
         return str(self.id)
+
+    def to_dict(self):
+        d = self.__dict__
+        d["transaction_list"] = [x.__repr__() for x in self.transaction_list]
+        return d
 
     def create_full_name(self):
         # crea las variables self.full_name y self.full_name_simple

@@ -22,6 +22,9 @@ class TransactionBase:
     def __repr__(self):
         return self.id
 
+    def to_dict(self):
+        return self.__dict__
+
     def set_amount(self, new_amount):
         # Fija la cantidad de monedos de la transacción.
 
@@ -66,7 +69,7 @@ class Purchase(TransactionBase):
 
     def add_remove_participant(self, id):
         # Añade o elimina la id que se ha pasado, dependiendo de si está o no en el grupo.
-
+        id = int(id)
         if id in self.participants:
             self.remove_participant(id)
         else:
