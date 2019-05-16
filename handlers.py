@@ -73,6 +73,17 @@ def add(bot, update, args, chat_data, user_data):
                                         reply_markup=ForceReply(selective=True))
 
 
+def force_save(bot, update):
+    if int(update.effective_user.id) != const.VETU_ID:
+        return
+
+    user_manager.save()
+    transaction_manager.save()
+    group_manager.save()
+
+    update.effective_message.reply_text("Guardado.")
+
+
 # Other Messages
 def new_members(bot, update, chat_data):
     # Cuando se añaden nuevos usuarios al grupo los añade a la instancia del grupo correspondiente. Si se ha añadido
@@ -166,7 +177,7 @@ def new_purchase(bot, update, chat_data, user_data):
     amount, comment = data.split("*")[1:]
 
     purchase = transaction_manager.add_transaction(transaction_type="purchase",
-                                                   amount=amount,
+                                                   amount=float(amount),
                                                    comment=comment,
                                                    buyer=user.id,
                                                    participants=[x.id for x in group.user_list],
@@ -222,10 +233,14 @@ def new_purchase_buyer(bot, update, user_data):
     elif cmd == "n_pur_bu_sel":
         buyer_id, page, transaction_id = data.split("*")[1:]
         purchase = transaction_manager.get_transaction_by_id(transaction_id)
-        purchase.set_buyer(buyer_id)
+        if purchase.buyer == int(buyer_id):
+            update.callback_query.answer()
+            return
+        purchase.set_buyer(int(buyer_id))
     else:
         print("wtf es %s" % cmd)
         return
+    page = int(page)
 
     group = group_manager.get_group_by_id(purchase.group_id)
     last_page = int(ceil(len(group.user_list) / 5.0)) - 1
@@ -249,7 +264,7 @@ def new_purchase_buyer(bot, update, user_data):
     keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
                                           callback_data="n_pur_pa_p*0*%s" % purchase.id),
                      InlineKeyboardButton(lang.get_text("cancel"),
-                                          callback_data="cancel*n_pur_bu_p*0*%s" % purchase.id)])
+                                          callback_data="n_trc_c*%s" % purchase.id)])
 
     update.effective_message.edit_text(text=lang.get_text("select_buyer",
                                                           buyer=user_manager.get_user_by_id(purchase.buyer).full_name),
@@ -272,7 +287,7 @@ def new_purchase_participants(bot, update, user_data):
     elif cmd == "n_pur_pa_sel":
         participant_id, page, transaction_id = data.split("*")[1:]
         purchase = transaction_manager.get_transaction_by_id(transaction_id)
-        purchase.add_remove_participant(participant_id)
+        purchase.add_remove_participant(int(participant_id))
     else:
         print("wtf es %s" % cmd)
         return
@@ -284,7 +299,7 @@ def new_purchase_participants(bot, update, user_data):
 
     keyboard = []
     for participant in group.user_list[5 * page:5 + 5 * page]:
-        text = "❎ " if str(participant.id) not in str(purchase.participants) else "☑️"
+        text = "❎ " if participant.id not in purchase.participants else "☑️ "
         keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
                                               callback_data="n_pur_pa_sel*%d*%d*%s" % (participant.id,
                                                                                        page,
@@ -301,7 +316,7 @@ def new_purchase_participants(bot, update, user_data):
     keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
                                           callback_data="n_pur_res*%s" % purchase.id),
                      InlineKeyboardButton(lang.get_text("cancel"),
-                                          callback_data="cancel*n_pur_pa_p*0*%s" % purchase.id)])
+                                          callback_data="n_trc_c*%s" % purchase.id)])
 
     participant_name_list = [user_manager.get_user_by_id(x).full_name for x in purchase.participants]
 
@@ -324,6 +339,10 @@ def new_purchase_resume(bot, update, user_data):
     participants = [user_manager.get_user_by_id(x) for x in purchase.participants]
     participants_text = lang.enum([x.full_name for x in participants])
 
+    if not participants:
+        update.callback_query.answer(lang.get_text("new_purchase_resume_error_not_0"))
+        return
+
     # TODO: cambiar los botones para que sea añadir otra compra transacción o mierda.
     keyboard = [[InlineKeyboardButton(lang.get_text("goto_group"), url="t.me/%s" % abs(purchase.group_id))]]
 
@@ -335,6 +354,22 @@ def new_purchase_resume(bot, update, user_data):
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)
+
+    for user_id in purchase.participants:
+        user_manager.get_user_by_id(user_id).add_transaction(purchase)
+
+
+def new_transaction_cancel(bot, update, user_data):
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    data = update.callback_query.data
+    purchase_id = data.split("*")[1]
+    transaction_manager.remove_transaction(purchase_id)
+
+    # TODO: This keyboard should invite the user to create new transactions.
+    keyboard = [[]]
+
+    update.effective_message.edit_text(lang.get_text("transaction_canceled"))
 
 
 # Inline shit
