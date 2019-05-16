@@ -46,6 +46,7 @@ def main():
     a(CallbackQueryHandler(h.hi_button, pattern=r"hi_group$", pass_chat_data=True, pass_user_data=True))
     a(CallbackQueryHandler(h.new_purchase_buyer, pattern="n_pur_bu_(sel|p)"))
     a(CallbackQueryHandler(h.new_purchase_participants, pattern="n_pur_pa_(sel|p)", pass_user_data=True))
+    a(CallbackQueryHandler(h.new_purchase_resume, pattern="n_pur_res", pass_user_data=True))
     a(CallbackQueryHandler(h.new_purchase, pattern="n_pur", pass_user_data=True, pass_chat_data=True))
     a(CallbackQueryHandler(h.none, pattern=r"none\*"))
     # INLINE SHIT

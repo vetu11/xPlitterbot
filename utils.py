@@ -8,7 +8,7 @@
 def join_unicode_list(list, space=None):
     # Junta los str o unicodes aportados en la lista en uno solo, y pone un separador entre medias si se especifica.
 
-    result = unicode()
+    result = u""
     result += list[0]
 
     for u in list[1:]:

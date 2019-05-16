@@ -20,14 +20,14 @@ class Group:
         self.lang = kwargs.get("lang", "EN-en")  # Idioma del grupo.
 
         # Conversión de ids a instancias de los usuarios.
-        if self.user_list and isinstance(self.user_list[0], (str, unicode)):
+        if self.user_list and isinstance(self.user_list[0], str):
             new_user_list = []
             for user_id in self.user_list:
                 new_user_list.append(user_manager.get_user_by_id(user_id))
             self.user_list = new_user_list
 
         # Conversión de ids a instancias de transacciones.
-        if self.transaction_list and isinstance(self.transaction_list, (str, unicode)):
+        if self.transaction_list and isinstance(self.transaction_list, str):
             new_transaction_list = []
             for transaction_id in self.transaction_list:
                 new_transaction_list.append(transaction_manager.get_transaction_by_id(transaction_id))

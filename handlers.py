@@ -169,7 +169,7 @@ def new_purchase(bot, update, chat_data, user_data):
                                                    amount=amount,
                                                    comment=comment,
                                                    buyer=user.id,
-                                                   participants=group.user_list,
+                                                   participants=[x.id for x in group.user_list],
                                                    group_id=group.id)
 
     group.add_user(user)
@@ -204,7 +204,8 @@ def new_purchase(bot, update, chat_data, user_data):
     bot.send_message(chat_id=user.id,
                      text=lang.get_text("select_buyer", buyer=user_manager.get_user_by_id(purchase.buyer).full_name),
                      reply_markup=InlineKeyboardMarkup(keyboard),
-                     parse_mode=ParseMode.MARKDOWN)
+                     parse_mode=ParseMode.MARKDOWN,
+                     disable_web_page_preview=True)
 
 
 def new_purchase_buyer(bot, update, user_data):
@@ -275,6 +276,7 @@ def new_purchase_participants(bot, update, user_data):
     else:
         print("wtf es %s" % cmd)
         return
+    page = int(page)
 
     group = group_manager.get_group_by_id(purchase.group_id)
     last_page = int(ceil(len(group.user_list) / 5.0)) - 1
@@ -282,7 +284,7 @@ def new_purchase_participants(bot, update, user_data):
 
     keyboard = []
     for participant in group.user_list[5 * page:5 + 5 * page]:
-        text = "❎" if participant.id != purchase.buyer else "☑️"
+        text = "❎ " if str(participant.id) not in str(purchase.participants) else "☑️"
         keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
                                               callback_data="n_pur_pa_sel*%d*%d*%s" % (participant.id,
                                                                                        page,
@@ -297,15 +299,39 @@ def new_purchase_participants(bot, update, user_data):
                          InlineKeyboardButton("⏩", callback_data="n_pur_pa_p*%d*%s" % (last_page, purchase.id))])
 
     keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
-                                          callback_data="n_pur_pa_p*0*%s" % purchase.id),
+                                          callback_data="n_pur_res*%s" % purchase.id),
                      InlineKeyboardButton(lang.get_text("cancel"),
                                           callback_data="cancel*n_pur_pa_p*0*%s" % purchase.id)])
 
     participant_name_list = [user_manager.get_user_by_id(x).full_name for x in purchase.participants]
 
-    update.effective_message.edit_text(text=lang.get_text("select_participant",
+    update.effective_message.edit_text(text=lang.get_text("select_participants",
                                                           buyer=user_manager.get_user_by_id(purchase.buyer).full_name,
                                                           participants=lang.enum(participant_name_list)),
+                                       reply_markup=InlineKeyboardMarkup(keyboard),
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       disable_web_page_preview=True)
+
+
+# Resume with the details of the just added purchase.
+def new_purchase_resume(bot, update, user_data):
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    data = update.callback_query.data
+    purchase_id = data.split("*")[1]
+    purchase = transaction_manager.get_transaction_by_id(purchase_id)
+    buyer = user_manager.get_user_by_id(purchase.buyer)
+    participants = [user_manager.get_user_by_id(x) for x in purchase.participants]
+    participants_text = lang.enum([x.full_name for x in participants])
+
+    # TODO: cambiar los botones para que sea añadir otra compra transacción o mierda.
+    keyboard = [[InlineKeyboardButton(lang.get_text("goto_group"), url="t.me/%s" % abs(purchase.group_id))]]
+
+    update.effective_message.edit_text(text=lang.get_text("new_purchase_resume",
+                                                          amount=purchase.amount,
+                                                          comment=purchase.comment,
+                                                          buyer=buyer.full_name,
+                                                          participants=participants_text),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)

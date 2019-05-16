@@ -41,6 +41,7 @@ class _UserManager:
         return new_group
 
     def get_user_by_id(self, user_id):
+        user_id = int(user_id)
         if user_id in self.user_dict:
             self.user_dict[user_id].refresh_expiration_date()
             return self.user_dict[user_id]

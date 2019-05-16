@@ -47,7 +47,7 @@ class _GroupManager:
         # Devuelve la instnacia del grupo con la id que se ha pasado.
 
         if group_id in self.group_dict:
-            self.group_dict[group_id].refresh_espiration_date()
+            self.group_dict[group_id].refresh_expiration_date()
             return self.group_dict[group_id]
         return None
 

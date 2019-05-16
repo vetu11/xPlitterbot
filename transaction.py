@@ -64,7 +64,7 @@ class Purchase(TransactionBase):
         self.buyer = id
         return past
 
-    def add_remove_paticipant(self, id):
+    def add_remove_participant(self, id):
         # Añade o elimina la id que se ha pasado, dependiendo de si está o no en el grupo.
 
         if id in self.participants:
