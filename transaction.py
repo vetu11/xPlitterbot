@@ -123,7 +123,7 @@ class Transfer(TransactionBase):
         self.payer = kwargs.get("payer")
         self.receiver = kwargs.get("receiver")
 
-        if self.payer is None or self.receiver is None:
+        if self.payer is None:
             raise TypeError
 
     def set_payer(self, id):

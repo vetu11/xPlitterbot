@@ -199,7 +199,7 @@ def new_purchase(bot, update, chat_data, user_data):
         keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
                                               callback_data="n_pur_bu_sel*%d*0*%s" % (participant.id,
                                                                                         purchase.id))])
-    if len(group.user_list) > 5:
+    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_pur_bu_p*0*%s" % purchase.id),
                          InlineKeyboardButton("⬅️", callback_data="n_pur_bu_p*0*%s" % purchase.id),
                          InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=0)),
@@ -210,7 +210,7 @@ def new_purchase(bot, update, chat_data, user_data):
     keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
                                           callback_data="n_pur_pa_p*0*%s" % purchase.id),
                      InlineKeyboardButton(lang.get_text("cancel"),
-                                          callback_data="cancel*n_pur_bu_p*0*%s" % purchase.id)])
+                                          callback_data="n_trc_c*%s" % purchase.id)])
 
     bot.send_message(chat_id=user.id,
                      text=lang.get_text("select_buyer", buyer=user_manager.get_user_by_id(purchase.buyer).full_name),
@@ -357,6 +357,198 @@ def new_purchase_resume(bot, update, user_data):
 
     for user_id in purchase.participants:
         user_manager.get_user_by_id(user_id).add_transaction(purchase)
+
+
+def new_transfer(bot, update, chat_data, user_data):
+    """Transaction type selected as transfer by the user. Now it haves to select payer."""
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    data = update.callback_query.data
+    amount, comment = data.split("*")[1:]
+
+    transfer = transaction_manager.add_transaction(transaction_type="transfer",
+                                                   amount=float(amount),
+                                                   comment=comment,
+                                                   payer=user.id,
+                                                   reciver=None,
+                                                   group_id=group.id)
+
+    group.add_user(user)
+
+    # Group message
+    keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+
+    update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       reply_markup=InlineKeyboardMarkup(keyboard))
+
+    # Private message
+    keyboard = []
+    for participant in group.user_list[:5]:
+        text = "⚪️ " if participant.id != transfer.payer else "🔘 ️"
+        keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
+                                              callback_data="n_tra_pa_sel*%d*0*%s" % (participant.id,
+                                                                                      transfer.id))])
+    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
+        keyboard.append([InlineKeyboardButton("⏪", callback_data="n_tra_pa_p*0*%s" % transfer.id),
+                         InlineKeyboardButton("⬅️", callback_data="n_tra_pa_p*0*%s" % transfer.id),
+                         InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=0)),
+                         InlineKeyboardButton("➡️", callback_data="n_tra_pa_p*1*%s" % transfer.id),
+                         InlineKeyboardButton("⏩", callback_data="n_tra_pa_p*%d*%s" %
+                                                                 (int(ceil(len(group.user_list) / 5.0)), transfer.id))])
+
+    keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
+                                          callback_data="n_tra_re_p*0*%s" % transfer.id),
+                     InlineKeyboardButton(lang.get_text("cancel"),
+                                          callback_data="n_trc_c*%s" % transfer.id)])
+
+    bot.send_message(chat_id=user.id,
+                     text=lang.get_text("select_payer", payer=user_manager.get_user_by_id(transfer.payer).full_name),
+                     reply_markup=InlineKeyboardMarkup(keyboard),
+                     parse_mode=ParseMode.MARKDOWN,
+                     disable_web_page_preview=True)
+
+
+def new_transfer_payer(bot, update, user_data):
+    """Payer or page selected on the new_transfer_payer menu"""
+
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    data = update.callback_query.data
+    cmd = data.split("*")[0]
+
+    if cmd == "n_tra_pa_p":
+        page, transaction_id = data.split("*")[1:]
+        transfer = transaction_manager.get_transaction_by_id(transaction_id)
+    elif cmd == "n_tra_pa_sel":
+        buyer_id, page, transaction_id = data.split("*")[1:]
+        transfer = transaction_manager.get_transaction_by_id(transaction_id)
+        if transfer.payer == int(buyer_id):
+            update.callback_query.answer()
+            return
+        transfer.set_payer(int(buyer_id))
+    else:
+        print("wtf es %s" % cmd)
+        return
+    page = int(page)
+
+    group = group_manager.get_group_by_id(transfer.group_id)
+    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
+    next_page = last_page if page >= last_page else page + 1
+
+    keyboard = []
+    for participant in group.user_list[5 * page:5 + 5 * page]:
+        text = "⚪️ " if participant.id != transfer.payer else "🔘 ️"
+        keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
+                                              callback_data="n_tra_pa_sel*%d*%d*%s" % (participant.id,
+                                                                                       page,
+                                                                                       transfer.id))])
+    if len(group.user_list) > 5:
+        keyboard.append([InlineKeyboardButton("⏪", callback_data="n_tra_pa_p*0*%s" % transfer.id),
+                         InlineKeyboardButton("⬅️", callback_data="n_tra_pa_p*%d*%s" % (0 if page <= 0 else page - 1,
+                                                                                        transfer.id)),
+                         InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=page)),
+                         InlineKeyboardButton("➡️", callback_data="n_tra_pa_p*%d*%s" % (next_page, transfer.id)),
+                         InlineKeyboardButton("⏩", callback_data="n_tra_pa_p*%d*%s" % (last_page, transfer.id))])
+
+    keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
+                                          callback_data="n_tra_re_p*0*%s" % transfer.id),
+                     InlineKeyboardButton(lang.get_text("cancel"),
+                                          callback_data="n_trc_c*%s" % transfer.id)])
+
+    update.effective_message.edit_text(text=lang.get_text("select_payer",
+                                                          payer=user_manager.get_user_by_id(transfer.payer).full_name),
+                                       reply_markup=InlineKeyboardMarkup(keyboard),
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       disable_web_page_preview=True)
+
+
+def new_transfer_receiver(bot, update, user_data):
+    """After selecting a payer fore the transfer, the user must select a receiver. This is where that shit happens."""
+
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    data = update.callback_query.data
+    cmd = data.split("*")[0]
+
+    if cmd == "n_tra_re_p":
+        page, transaction_id = data.split("*")[1:]
+        transfer = transaction_manager.get_transaction_by_id(transaction_id)
+    elif cmd == "n_tra_re_sel":
+        participant_id, page, transaction_id = data.split("*")[1:]
+        transfer = transaction_manager.get_transaction_by_id(transaction_id)
+        transfer.set_receiver(int(participant_id))
+    else:
+        print("wtf es %s" % cmd)
+        return
+    page = int(page)
+
+    group = group_manager.get_group_by_id(transfer.group_id)
+    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
+    next_page = last_page if page >= last_page else page + 1
+
+    keyboard = []
+    for participant in group.user_list[5 * page:5 + 5 * page]:
+        text = "⚪️" if participant.id != transfer.receiver else "🔘 ️"
+        keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
+                                              callback_data="n_tra_re_sel*%d*%d*%s" % (participant.id,
+                                                                                       page,
+                                                                                       transfer.id))])
+
+    if len(group.user_list) > 5:
+        keyboard.append([InlineKeyboardButton("⏪", callback_data="n_tra_re_p*0*%s" % transfer.id),
+                         InlineKeyboardButton("⬅️", callback_data="n_tra_re_p*%d*%s" % (0 if page <= 0 else page - 1,
+                                                                                        transfer.id)),
+                         InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=page)),
+                         InlineKeyboardButton("➡️", callback_data="n_tra_re_p*%d*%s" % (next_page, transfer.id)),
+                         InlineKeyboardButton("⏩", callback_data="n_tra_re_p*%d*%s" % (last_page, transfer.id))])
+
+    keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
+                                          callback_data="n_tra_res*%s" % transfer.id),
+                     InlineKeyboardButton(lang.get_text("cancel"),
+                                          callback_data="n_trc_c*%s" % transfer.id)])
+
+    receiver = user_manager.get_user_by_id(transfer.receiver).full_name if transfer.receiver is not None else ""
+
+    update.effective_message.edit_text(text=lang.get_text("select_receiver",
+                                                          amount=transfer.amount,
+                                                          payer=user_manager.get_user_by_id(transfer.payer).full_name,
+                                                          receiver=receiver),
+                                       reply_markup=InlineKeyboardMarkup(keyboard),
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       disable_web_page_preview=True)
+
+
+def new_transfer_resume(bot, update, user_data):
+    """Final message of the new_transfer series. A message resuming the new created transfer."""
+
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    data = update.callback_query.data
+    transfer_id = data.split("*")[1]
+    transfer = transaction_manager.get_transaction_by_id(transfer_id)
+    payer = user_manager.get_user_by_id(transfer.payer)
+    receiver = user_manager.get_user_by_id(transfer.receiver)
+
+    if not receiver:
+        update.callback_query.answer(lang.get_text("new_transfer_resume_error_need_receiver"))
+        return
+
+    # TODO: cambiar los botones para que sea añadir otra compra transacción o mierda.
+    keyboard = [[InlineKeyboardButton(lang.get_text("goto_group"), url="t.me/%s" % abs(transfer.group_id))]]
+
+    update.effective_message.edit_text(text=lang.get_text("new_transfer_resume",
+                                                          amount=transfer.amount,
+                                                          comment=transfer.comment,
+                                                          payer=payer.full_name,
+                                                          receiver=receiver.full_name),
+                                       reply_markup=InlineKeyboardMarkup(keyboard),
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       disable_web_page_preview=True)
+
+    for user_id in transfer.participants:
+        user_manager.get_user_by_id(user_id).add_transaction(transfer)
 
 
 def new_transaction_cancel(bot, update, user_data):
