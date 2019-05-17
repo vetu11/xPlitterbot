@@ -12,6 +12,7 @@ class Group:
 
     def __init__(self, **kwargs):
         self.id = kwargs.get("id")  # ID numerica del grupo, dada por Telegram.
+        self.title = kwargs.get("title")
         self.user_list = kwargs.get("user_list", [])  # Lista de los participantes del grupo. Debe contener instantcias de
                                                   # usuarios, si son strings se interpretarán como sus IDs.
         self.transaction_list = kwargs.get("transaction_list", [])  # Lo mismo de arriba pero con trasacciones.

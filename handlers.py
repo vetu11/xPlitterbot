@@ -65,7 +65,7 @@ def add(bot, update, args, chat_data, user_data):
 
     if args:
         if re_amount_comment.match(utils.join_unicode_list(args, " ")):
-            select_transaction_type(bot, update, user_data)
+            select_transaction_type_group(bot, update, user_data)
 
             return
     update.effective_message.reply_text(lang.get_text("add_message"),
@@ -112,25 +112,51 @@ def new_members(bot, update, chat_data):
                                             parse_mode=ParseMode.MARKDOWN)
 
 
-def select_transaction_type(bot, update, user_data):
+def select_transaction_type_group(bot, update, user_data):
     # Este método se ejecutará cuando el bot reciba un mensaje con el formato "<cantidad> <comentario>", que
     # deberia ser una contestación al mensaje de new_members, cuando reciba el comando /add.
 
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
-    if "/add" in update.effective_message.text:
-        i = 1
-    else:
-        i = 0
-    amount = update.effective_message.text.split()[i]
-    comment = utils.join_unicode_list(update.effective_message.text.split()[i + 1:], space=" ") # TODO: hacer esto con un .replace(), que será notablemente más eficiente que paretir en cachos el text dos veces.
-    del i
 
-    keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data="n_pur*%s*%s"[:64] % (amount,
-                                                                                                            comment)),
-                 InlineKeyboardButton(lang.get_text("transfer"), callback_data="n_tra*%s*%s"[:64] % (amount,
-                                                                                                            comment)),
-                 InlineKeyboardButton(lang.get_text("debt"), callback_data="n_dbt*%s*%s"[:64] % (amount, comment))]]
+    txt = update.effective_message.text
+    if "/add" in txt:
+        txt = txt.replace("/add ", "")
+    amount = int(txt.split()[0])
+    comment = txt.replace(str(amount) + " ", "")
+
+    keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data=("n_pur*%s*%s" % (amount,
+                                                                                                 comment))[:64]),
+                 InlineKeyboardButton(lang.get_text("transfer"), callback_data=("n_tra*%s*%s" % (amount,
+                                                                                                 comment))[:64]),
+                 InlineKeyboardButton(lang.get_text("debt"), callback_data=("n_dbt*%s*%s" % (amount, comment))[:64])]]
+
+    update.effective_message.reply_text(lang.get_text("select_transaction_type_message",
+                                                      amount=amount,
+                                                      comment=comment),
+                                        parse_mode=ParseMode.MARKDOWN,
+                                        reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+def select_transaction_type_pm(bot, update, user_data):
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+
+    # We need to know what group is refering the user, if we don't know this may be an error due to a server restart.
+    if "editing" not in user_data:
+        return
+
+    txt = update.effective_message.text
+    if "/add" in txt:
+        txt = txt.replace("/add ", "")
+    amount = txt.split()[0]
+    comment = txt.replace(str(amount) + " ", "")
+
+    keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data=("n_pur*%s*%s" % (amount,
+                                                                                                 comment))[:64]),
+                 InlineKeyboardButton(lang.get_text("transfer"), callback_data=("n_tra*%s*%s" % (amount,
+                                                                                                 comment))[:64]),
+                 InlineKeyboardButton(lang.get_text("debt"), callback_data=("n_dbt*%s*%s" % (amount, comment))[:64])]]
 
     update.effective_message.reply_text(lang.get_text("select_transaction_type_message",
                                                       amount=amount,
@@ -170,7 +196,15 @@ def hi_button(bot, update, chat_data, user_data):
 def new_purchase(bot, update, chat_data, user_data):
     # Para el botón de añadir una compra, mostrado en el mensaje de saludo (new_members) y en otros mensajes.
 
-    group = group_manager.get_group(update.effective_chat, chat_data)
+    if update.effective_chat.type == "private":
+        # If "editing" it's not in user_data, we're here by an error we can't solve.
+        if "editing" not in user_data:
+            update.effective_message.edit_reply_markup(InlineKeyboardMarkup([[]]))
+            return
+        group = group_manager.get_group_by_id(user_data["editing"])
+        update.effective_message.delete()
+    else:
+        group = group_manager.get_group(update.effective_chat, chat_data)
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
     data = update.callback_query.data
@@ -347,22 +381,34 @@ def new_purchase_resume(bot, update, user_data):
     for user_id in purchase.participants:
         user_manager.get_user_by_id(user_id).add_transaction(purchase)
 
-    # TODO: cambiar los botones para que sea añadir otra compra transacción o mierda.
-    keyboard = [[InlineKeyboardButton(lang.get_text("goto_group"), url="t.me/%s" % abs(purchase.group_id))]]
+    keyboard = [[]]
+
+    group = group_manager.get_group_by_id(purchase.group_id).title
 
     update.effective_message.edit_text(text=lang.get_text("new_purchase_resume",
                                                           amount=purchase.amount,
                                                           comment=purchase.comment,
                                                           buyer=buyer.full_name,
-                                                          participants=participants_text),
+                                                          participants=participants_text,
+                                                          group=group),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)
 
+    user_data["editing"] = purchase.group_id
+
 
 def new_transfer(bot, update, chat_data, user_data):
     """Transaction type selected as transfer by the user. Now it haves to select payer."""
-    group = group_manager.get_group(update.effective_chat, chat_data)
+    if update.effective_chat.type == "private":
+        # If "editing" it's not in user_data, we're here by an error we can't solve.
+        if "editing" not in user_data:
+            update.effective_message.edit_reply_markup(InlineKeyboardMarkup([[]]))
+            return
+        group = group_manager.get_group_by_id(user_data["editing"])
+        update.effective_message.delete()
+    else:
+        group = group_manager.get_group(update.effective_chat, chat_data)
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
     data = update.callback_query.data
@@ -539,22 +585,32 @@ def new_transfer_resume(bot, update, user_data):
     payer.add_transaction(transfer)
     receiver.add_transaction(transfer)
 
-    # TODO: cambiar los botones para que sea añadir otra compra transacción o mierda.
-    keyboard = [[InlineKeyboardButton(lang.get_text("goto_group"), url="t.me/%s" % abs(transfer.group_id))]]
+    keyboard = [[]]
 
     update.effective_message.edit_text(text=lang.get_text("new_transfer_resume",
                                                           amount=transfer.amount,
                                                           comment=transfer.comment,
                                                           payer=payer.full_name,
-                                                          receiver=receiver.full_name),
+                                                          receiver=receiver.full_name,
+                                                          gruop=group_manager.get_group_by_id(transfer.group_id).title),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)
 
+    user_data["editing"] = transfer.group_id
+
 
 def new_debt(bot, update, chat_data, user_data):
     """Transaction type selected as debt by the user. Now it haves to select payer."""
-    group = group_manager.get_group(update.effective_chat, chat_data)
+    if update.effective_chat.type == "private":
+        # If "editing" it's not in user_data, we're here by an error we can't solve.
+        if "editing" not in user_data:
+            update.effective_message.edit_reply_markup(reply_markup=InlineKeyboardMarkup([[]]))
+            return
+        group = group_manager.get_group_by_id(user_data["editing"])
+        update.effective_message.delete()
+    else:
+        group = group_manager.get_group(update.effective_chat, chat_data)
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
     data = update.callback_query.data
@@ -734,17 +790,19 @@ def new_debt_resume(bot, update, user_data):
     lender.add_transaction(debt)
     debtor.add_transaction(debt)
 
-    # TODO: cambiar los botones para que sea añadir otra compra transacción o mierda.
-    keyboard = [[InlineKeyboardButton(lang.get_text("goto_group"), url="t.me/%s" % abs(debt.group_id))]]
+    keyboard = [[]]
 
     update.effective_message.edit_text(text=lang.get_text("new_debt_resume",
                                                           amount=debt.amount,
                                                           comment=debt.comment,
                                                           lender=lender.full_name,
-                                                          debtor=debtor.full_name),
+                                                          debtor=debtor.full_name,
+                                                          group=group_manager.get_group_by_id(debt.group_id).title),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)
+
+    user_data["editing"] = debt.group_id
 
 
 def new_transaction_cancel(bot, update, user_data):
