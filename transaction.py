@@ -96,7 +96,7 @@ class Debt(TransactionBase):
         self.lender = kwargs.get("lender")
         self.debtor = kwargs.get("debtor")
 
-        if self.lender is None or self.debtor is None:
+        if self.lender is None:
             raise TypeError
 
     def set_lender(self, id):

@@ -53,6 +53,10 @@ def main():
     a(CallbackQueryHandler(h.new_transfer_receiver, pattern="n_tra_re_(sel|p)", pass_user_data=True))
     a(CallbackQueryHandler(h.new_transfer_resume, pattern="n_tra_res", pass_user_data=True))
     a(CallbackQueryHandler(h.new_transfer, pattern="n_tra", pass_user_data=True, pass_chat_data=True))
+    a(CallbackQueryHandler(h.new_debt_lender, pattern="n_dbt_le_(sel|p)", pass_user_data=True))
+    a(CallbackQueryHandler(h.new_debt_debtor, pattern="n_dbt_de_(sel|p)", pass_user_data=True))
+    a(CallbackQueryHandler(h.new_debt_resume, pattern="n_dbt_res", pass_user_data=True))
+    a(CallbackQueryHandler(h.new_debt, pattern="n_dbt", pass_user_data=True, pass_chat_data=True))
     a(CallbackQueryHandler(h.new_transaction_cancel, pattern="n_trc_c", pass_user_data=True))
     a(CallbackQueryHandler(h.none, pattern=r"none\*"))
     # INLINE SHIT
