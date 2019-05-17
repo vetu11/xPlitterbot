@@ -24,13 +24,13 @@ class _TransactionManager:
     def _create_transaction(transaction_type, **kwargs):
         # Crea una trasacción y la devuelve
 
-        if transaction_type is "purchase":
+        if transaction_type == "purchase":
             kwargs.update({"type": "purchase"})
             return Purchase(**kwargs)
-        elif transaction_type is "debt":
+        elif transaction_type == "debt":
             kwargs.update({"type": "debt"})
             return Debt(**kwargs)
-        elif transaction_type is "transfer":
+        elif transaction_type == "transfer":
             kwargs.update({"type": "transfer"})
             return Transfer(**kwargs)
         else:
