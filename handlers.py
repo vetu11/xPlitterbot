@@ -217,9 +217,7 @@ def new_members(bot, update, chat_data):
             group.add_telegram_user(update.effective_user)
 
     if new_group:
-        keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")],
-                    [InlineKeyboardButton(lang.get_text("create_purchase"), callback_data="new_pur")]]
-        # keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
+        keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
 
         update.effective_message.reply_text(lang.get_text("new_group"),
                                             reply_markup=InlineKeyboardMarkup(keyboard),
