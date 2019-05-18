@@ -45,7 +45,7 @@ class User:
         return str(self.id)
 
     def to_dict(self):
-        d = self.__dict__
+        d = dict(self.__dict__)
         d["transaction_list"] = [x.__repr__() for x in self.transaction_list]
         return d
 
