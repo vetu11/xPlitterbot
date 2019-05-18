@@ -23,6 +23,8 @@ RE_AMOUNT_COMMENT_PATTERN = r"\d+((\.|,)\d+)? (\w *)+"  # <amount> <comment>
 
 USERS_PER_PAGE_NEW_TRANSACTION = 10
 
+TRANSACTIONS_PER_PAGE_HISTORY = 5
+
 
 class _Aux:
     # Clase de una sola instancia donde se guardarán variables que sean compartidas entre varios archivos con intención

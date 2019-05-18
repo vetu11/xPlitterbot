@@ -39,6 +39,7 @@ def main():
     a(CommandHandler('donate', h.donate))
     a(CommandHandler('add', h.add, filters=Filters.group, pass_chat_data=True, pass_user_data=True, pass_args=True))
     a(CommandHandler('split', h.split, filters=Filters.group, pass_chat_data=True, pass_user_data=True))
+    a(CommandHandler('history', h.history_group, filters=Filters.group, pass_user_data=True, pass_chat_data=True))
     a(CommandHandler('save', h.force_save))
     # MENSAJES
     a(MessageHandler(Filters.status_update.new_chat_members, h.new_members, pass_chat_data=True))
@@ -64,7 +65,10 @@ def main():
     a(CallbackQueryHandler(h.new_debt_resume, pattern="n_dbt_res", pass_user_data=True))
     a(CallbackQueryHandler(h.new_debt, pattern="n_dbt", pass_user_data=True, pass_chat_data=True))
     a(CallbackQueryHandler(h.new_transaction_cancel, pattern="n_trc_c", pass_user_data=True))
-    a(CallbackQueryHandler(h.none, pattern=r"none\*"))
+    a(CallbackQueryHandler(h.history_group, pattern="hi", pass_user_data=True, pass_chat_data=True))
+    a(CallbackQueryHandler(h.transaction_info, pattern=r"tr\*", pass_chat_data=True, pass_user_data=True))
+    a(CallbackQueryHandler(h.delete_transaction, pattern=r"del_tr\*", pass_user_data=True, pass_chat_data=True))
+    a(CallbackQueryHandler(h.none, pattern=r"none"))
     # INLINE SHIT
     a(InlineQueryHandler(h.valid_inline_query, pass_user_data=True, pattern=r"\d+((\.|,)\d+)* (\w *)+"))
     a(InlineQueryHandler(h.not_valid_inline_query, pass_user_data=True))

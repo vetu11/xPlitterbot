@@ -10,14 +10,55 @@ from math import ceil
 from lang import get_lang
 
 from telegram import ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle,\
-    InputTextMessageContent, ForceReply, Bot, ChatAction
+    InputTextMessageContent, ForceReply, Bot, Update, ChatAction
 from telegram.ext import run_async
+from telegram.error import Unauthorized
 
 from group_manager import group_manager
 from user_manager import user_manager
 from transaction_manager import transaction_manager
 
 re_amount_comment = re.compile(const.RE_AMOUNT_COMMENT_PATTERN)
+
+
+def _history_transactions_buttons(transaction_list, page):
+    type_to_symbol = {"purchase": "🛒", "transfer": "💸", "debt": "📝"}
+    transaction_list = list(transaction_list)
+    transaction_list.reverse()
+    keyboard = []
+
+    t_min = page * const.TRANSACTIONS_PER_PAGE_HISTORY
+    t_max = (page + 1) * const.TRANSACTIONS_PER_PAGE_HISTORY
+    if t_max > len(transaction_list):
+        t_max = len(transaction_list)
+
+    for transaction in transaction_list[t_min:t_max]:
+        button_text = type_to_symbol[transaction.type] + "%s💰 %s\n" % (transaction.amount,
+                                                                         transaction.comment[:10])
+        keyboard.append([InlineKeyboardButton(button_text, callback_data="tr*%s*%s" % (transaction.id, page))])
+
+    if len(transaction_list) > const.TRANSACTIONS_PER_PAGE_HISTORY:
+        last_page = int(ceil(len(transaction_list) / const.TRANSACTIONS_PER_PAGE_HISTORY)) - 1
+        prev_page = 0 if page <= 0 else page - 1
+        next_page = last_page if page >= last_page else page + 1
+
+        keyboard.append([InlineKeyboardButton("⏪", callback_data="hi*0" if page != 0 else "none"),
+                         InlineKeyboardButton("⬅️", callback_data=("hi*%s" % prev_page if prev_page != page else "none")),
+                         InlineKeyboardButton("#️⃣", callback_data="none*%s" % page),
+                         InlineKeyboardButton("➡️", callback_data=("hi*%s" % next_page) if page != next_page else "none"),
+                         InlineKeyboardButton("⏩", callback_data=("hi*%s" % last_page) if page != last_page else "none")])
+
+    return keyboard
+
+
+def _check_pm_ready(bot, update, lang):
+    try:
+        bot.send_chat_action(update.effective_user.id, ChatAction.TYPING)
+        return True
+    except Unauthorized:
+        update.callback_query.answer(lang.get_text("first_pm_the_bot", bot_username=const.aux.bot_username),
+                                     show_alert=True)
+        return False
 
 
 def generic_message(bot, update, text_code):
@@ -70,7 +111,6 @@ def add(bot, update, args, chat_data, user_data):
     if args:
         if re_amount_comment.match(utils.join_unicode_list(args, " ")):
             select_transaction_type_group(bot, update, user_data)
-
             return
     update.effective_message.reply_text(lang.get_text("add_message"),
                                         parse_mode=ParseMode.MARKDOWN,
@@ -116,6 +156,36 @@ def split(bot:  Bot, update, chat_data, user_data):
                                         movements=movements_text),
                           parse_mode=ParseMode.MARKDOWN,
                           disable_web_page_preview=True)
+
+
+def history_group(bot, update: Update, chat_data, user_data):
+    """/history command. resumes the last transactions."""
+
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+
+    # Page can only be known if this is a inline_callback, else this is the first message.
+    if update.callback_query is not None:
+        page = int(update.callback_query.data.split("*")[1])
+        method = update.effective_message.edit_text
+    else:
+        page = 0
+        method = update.effective_message.reply_text
+
+    keyboard = _history_transactions_buttons(group.transaction_list, page)
+
+    if len(group.transaction_list) > 0:
+        method(text=lang.get_text("history_group"),
+               parse_mode=ParseMode.MARKDOWN,
+               disable_web_page_preview=True,
+               reply_markup=InlineKeyboardMarkup(keyboard))
+        return
+    else:
+        method(text=lang.get_text("history_empty"),
+               parse_mode=ParseMode.MARKDOWN,
+               disable_web_page_preview=True)
 
 
 def force_save(bot, update):
@@ -167,8 +237,9 @@ def select_transaction_type_group(bot, update, user_data):
     txt = update.effective_message.text
     if "/add" in txt:
         txt = txt.replace("/add ", "")
-    amount = float(txt.split()[0])
-    comment = txt.replace(str(amount) + " ", "")
+    amount = txt.split()[0]
+    comment = txt.replace(amount + " ", "")
+    amount = float(amount)
 
     keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data=("n_pur*%s*%s" % (amount,
                                                                                                  comment))[:64]),
@@ -220,7 +291,7 @@ def message(bot, update, chat_data):
 def none(bot, update):
     # Para los botones que no debería hacer nada o simplemente mostrar un texto en pantalla.
 
-    text = update.callback_query.data.split("*")[1]
+    text = update.callback_query.data.split("*")[1] if len(update.callback_query.data.split("*")) > 1 else ""
 
     update.callback_query.answer(text)
 
@@ -238,7 +309,76 @@ def hi_button(bot, update, chat_data, user_data):
                                                group_name=update.effective_chat.title))
 
 
-def new_purchase(bot, update, chat_data, user_data):
+def transaction_info(bot, update: Update, chat_data, user_data):
+
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    transaction_id, page = update.callback_query.data.split("*")[1:]
+    transaction = transaction_manager.get_transaction_by_id(transaction_id)
+    page = int(page)
+
+    if transaction.type == "purchase":
+        participants_text = lang.enum([user_manager.get_user_by_id(x).full_name for x in transaction.participants])
+
+        text = lang.get_text("purchase_info",
+                             comment=transaction.comment,
+                             amount=transaction.amount,
+                             buyer=user_manager.get_user_by_id(transaction.buyer).full_name,
+                             participants=participants_text)
+    elif transaction.type == "transfer":
+        text = lang.get_text("transfer_info",
+                             comment=transaction.comment,
+                             amount=transaction.amount,
+                             payer=user_manager.get_user_by_id(transaction.payer).full_name,
+                             receiver=user_manager.get_user_by_id(transaction.receiver).full_name)
+    else:
+        text = lang.get_text("debt_info",
+                             comment=transaction.comment,
+                             amount=transaction.amount,
+                             lender=user_manager.get_user_by_id(transaction.lender).full_name,
+                             debtor=user_manager.get_user_by_id(transaction.debtor).full_name)
+
+    keyboard = [[InlineKeyboardButton(lang.get_text("go_back"), callback_data="hi*%s" % page),
+                 InlineKeyboardButton(lang.get_text("delete"), callback_data="del_tr*%s" % transaction_id)]]
+
+    update.effective_message.edit_text(text,
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       disable_web_page_preview=True,
+                                       reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+def delete_transaction(bot, update, user_data, chat_data):
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+    transaction_id = update.callback_query.data.split("*")[1]
+    transaction = transaction_manager.get_transaction_by_id(transaction_id)
+
+    group_manager.get_group_by_id(transaction.group_id).remove_transaction(transaction_id)
+    if transaction.type == "purchase":
+        user_manager.get_user_by_id(transaction.buyer).remove_transaction(transaction_id)
+        for user_id in transaction.participants:
+            user_manager.get_user_by_id(user_id).remove_transaction(transaction_id)
+    elif transaction.type == "transfer":
+        user_manager.get_user_by_id(transaction.payer).remove_transaction(transaction_id)
+        user_manager.get_user_by_id(transaction.receiver).remove_transaction(transaction_id)
+    else:
+        user_manager.get_user_by_id(transaction.lender).remove_transaction(transaction_id)
+        user_manager.get_user_by_id(transaction.debtor).remove_transaction(transaction_id)
+    transaction_manager.remove_transaction(transaction_id)
+
+    keyboard = [[InlineKeyboardButton(lang.get_text("go_back"), callback_data="hi*0")]]
+
+    update.effective_message.edit_text(lang.get_text("transaction_deleted"),
+                                       parse_mode=ParseMode.MARKDOWN,
+                                       disable_web_page_preview=True,
+                                       reply_markup=InlineKeyboardMarkup(keyboard))
+
+
+def new_purchase(bot: Bot, update, chat_data, user_data):
     # Para el botón de añadir una compra, mostrado en el mensaje de saludo (new_members) y en otros mensajes.
 
     if update.effective_chat.type == "private":
@@ -254,6 +394,9 @@ def new_purchase(bot, update, chat_data, user_data):
     lang = get_lang(user.language_code)
     data = update.callback_query.data
     amount, comment = data.split("*")[1:]
+
+    if not _check_pm_ready(bot, update, lang):
+        return
 
     purchase = transaction_manager.add_transaction(transaction_type="purchase",
                                                    amount=float(amount),
@@ -323,8 +466,6 @@ def new_purchase_buyer(bot, update, user_data):
     page = int(page)
 
     group = group_manager.get_group_by_id(purchase.group_id)
-    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
-    next_page = last_page if page >= last_page else page + 1
 
     keyboard = []
     for member in group.user_list[5 * page:5 + 5 * page]:
@@ -333,7 +474,9 @@ def new_purchase_buyer(bot, update, user_data):
                                               callback_data="n_pur_bu_sel*%d*%d*%s" % (member.id,
                                                                                        page,
                                                                                        purchase.id))])
-    if len(group.user_list) > 5:
+    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
+        last_page = int(ceil(len(group.user_list) / const.USERS_PER_PAGE_NEW_TRANSACTION)) - 1
+        next_page = last_page if page >= last_page else page + 1
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_pur_bu_p*0*%s" % purchase.id),
                          InlineKeyboardButton("⬅️", callback_data="n_pur_bu_p*%d*%s" % (0 if page <= 0 else page - 1,
                                                                                         purchase.id)),
@@ -460,6 +603,9 @@ def new_transfer(bot, update, chat_data, user_data):
     lang = get_lang(user.language_code)
     data = update.callback_query.data
     amount, comment = data.split("*")[1:]
+
+    if not _check_pm_ready(bot, update, lang):
+        return
 
     transfer = transaction_manager.add_transaction(transaction_type="transfer",
                                                    amount=float(amount),
@@ -664,6 +810,9 @@ def new_debt(bot, update, chat_data, user_data):
     lang = get_lang(user.language_code)
     data = update.callback_query.data
     amount, comment = data.split("*")[1:]
+
+    if not _check_pm_ready(bot, update, lang):
+        return
 
     debt = transaction_manager.add_transaction(transaction_type="debt",
                                                amount=float(amount),
