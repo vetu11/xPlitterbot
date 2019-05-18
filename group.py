@@ -69,14 +69,15 @@ class Group:
             else:
                 self.transaction_list.remove(transaction)
 
+        self.ledger = new_ledger
+
     def calculate_best_movements(self):
         # Crea una lista de trasacciones sugeridas para resolver las deudas del grupo lo más simple posible.
+        # @pre: ledger has been recently calculated.
 
         positive = []  # (amount, user_id)
         negative = []  # (amount, user_id)
         suggested_transfers = []  # (from_id, to_id, amount)
-
-        self.calculate_ledger()
 
         for user_id in self.ledger:
             if self.ledger[user_id] > 0:
@@ -116,6 +117,8 @@ class Group:
             positive.sort(reverse=True)
             negative.sort()
 
+        return suggested_transfers
+
     def add_transaction(self, transaction):
         # Añade una transacción a la lista del grupo, devuelve True lo ha hecho; si la trnsacción ya estaba False.
 
@@ -138,7 +141,7 @@ class Group:
 
         return False
 
-    def add_user(self, telegram_user):
+    def add_telegram_user(self, telegram_user):
         # Añade unusuario a la lista de participantes del grupo. Se le debe da una instancia de Telegram.
 
         user = user_manager.get_user(telegram_user)

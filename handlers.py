@@ -2,6 +2,7 @@
 # Archivo: handlers
 # Descripción: Aquí se declararán los handlers a las distintas llamadas de la API.
 
+import time
 import re
 import const
 import utils
@@ -9,7 +10,8 @@ from math import ceil
 from lang import get_lang
 
 from telegram import ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle,\
-    InputTextMessageContent, ForceReply
+    InputTextMessageContent, ForceReply, Bot, ChatAction
+from telegram.ext import run_async
 
 from group_manager import group_manager
 from user_manager import user_manager
@@ -60,6 +62,8 @@ def donate(bot, update):
 # Bot Commands
 def add(bot, update, args, chat_data, user_data):
     # Pide más datos o crea una transacción con los datos proporcionados.
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
 
@@ -71,6 +75,47 @@ def add(bot, update, args, chat_data, user_data):
     update.effective_message.reply_text(lang.get_text("add_message"),
                                         parse_mode=ParseMode.MARKDOWN,
                                         reply_markup=ForceReply(selective=True))
+
+
+@run_async
+def split(bot:  Bot, update, chat_data, user_data):
+    """/split command response."""
+
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+
+    # Phase 1, calculate ledger
+    our_message = update.effective_message.reply_text(lang.get_text("split_phase_1_calculating"),
+                                                      parse_mode=ParseMode.MARKDOWN)
+    bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
+    group.calculate_ledger()
+
+    ledger_text = ""
+
+    for member_id in group.ledger:
+        ledger_text += "" + user_manager.get_user_by_id(member_id).full_name + " " + \
+                       str(group.ledger[member_id]) + "💰\n"
+
+    # Phase 2, calculate movements
+    our_message.edit_text(lang.get_text("split_phase_2_calculating", ledger=ledger_text),
+                          parse_mode=ParseMode.MARKDOWN,
+                          disable_web_page_preview=True)
+    bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
+    best_movents = group.calculate_best_movements()
+
+    movements_text = ""
+
+    for movement in best_movents:
+        movements_text += user_manager.get_user_by_id(movement[0]).full_name + " ----> " + \
+            user_manager.get_user_by_id(movement[1]).full_name + " %s 💰" % abs(movement[2])
+
+    our_message.edit_text(lang.get_text("split_results",
+                                        ledger=ledger_text,
+                                        movements=movements_text),
+                          parse_mode=ParseMode.MARKDOWN,
+                          disable_web_page_preview=True)
 
 
 def force_save(bot, update):
@@ -99,7 +144,7 @@ def new_members(bot, update, chat_data):
         if user.id == bot_id:
             new_group = True
         else:
-            group.add_user(user)
+            group.add_telegram_user(update.effective_user)
 
     if new_group:
         keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")],
@@ -122,7 +167,7 @@ def select_transaction_type_group(bot, update, user_data):
     txt = update.effective_message.text
     if "/add" in txt:
         txt = txt.replace("/add ", "")
-    amount = int(txt.split()[0])
+    amount = float(txt.split()[0])
     comment = txt.replace(str(amount) + " ", "")
 
     keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data=("n_pur*%s*%s" % (amount,
@@ -185,7 +230,7 @@ def hi_button(bot, update, chat_data, user_data):
 
     group = group_manager.get_group(update.effective_chat, chat_data)
     user = user_manager.get_user(update.effective_user, user_data)
-    group.add_user(update.effective_user)
+    group.add_telegram_user(update.effective_user)
     lang = get_lang(user.language_code)
 
     update.callback_query.answer(lang.get_text("hi",
@@ -217,14 +262,15 @@ def new_purchase(bot, update, chat_data, user_data):
                                                    participants=[x.id for x in group.user_list],
                                                    group_id=group.id)
 
-    group.add_user(user)
+    group.add_telegram_user(update.effective_user)
 
     # Mensaje al grupo
-    keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+    if update.effective_chat.type != "private":
+        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
 
-    update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
-                                       parse_mode=ParseMode.MARKDOWN,
-                                       reply_markup=InlineKeyboardMarkup(keyboard))
+        update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
+                                           parse_mode=ParseMode.MARKDOWN,
+                                           reply_markup=InlineKeyboardMarkup(keyboard))
 
     # Mensaje PM
     keyboard = []
@@ -377,20 +423,21 @@ def new_purchase_resume(bot, update, user_data):
         update.callback_query.answer(lang.get_text("new_purchase_resume_error_not_0"))
         return
 
+    group_manager.get_group_by_id(purchase.group_id).add_transaction(purchase)
     buyer.add_transaction(purchase)
     for user_id in purchase.participants:
         user_manager.get_user_by_id(user_id).add_transaction(purchase)
 
     keyboard = [[]]
 
-    group = group_manager.get_group_by_id(purchase.group_id).title
+    group_title = group_manager.get_group_by_id(purchase.group_id).title
 
     update.effective_message.edit_text(text=lang.get_text("new_purchase_resume",
                                                           amount=purchase.amount,
                                                           comment=purchase.comment,
                                                           buyer=buyer.full_name,
                                                           participants=participants_text,
-                                                          group=group),
+                                                          title=group_title),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)
@@ -421,14 +468,15 @@ def new_transfer(bot, update, chat_data, user_data):
                                                    reciver=None,
                                                    group_id=group.id)
 
-    group.add_user(user)
+    group.add_telegram_user(update.effective_user)
 
     # Group message
-    keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+    if update.effective_chat.type != "private":
+        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
 
-    update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
-                                       parse_mode=ParseMode.MARKDOWN,
-                                       reply_markup=InlineKeyboardMarkup(keyboard))
+        update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
+                                           parse_mode=ParseMode.MARKDOWN,
+                                           reply_markup=InlineKeyboardMarkup(keyboard))
 
     # Private message
     keyboard = []
@@ -582,6 +630,7 @@ def new_transfer_resume(bot, update, user_data):
         update.callback_query.answer(lang.get_text("new_transfer_resume_error_need_receiver"))
         return
 
+    group_manager.get_group_by_id(transfer.group_id).add_transaction(transfer)
     payer.add_transaction(transfer)
     receiver.add_transaction(transfer)
 
@@ -592,7 +641,7 @@ def new_transfer_resume(bot, update, user_data):
                                                           comment=transfer.comment,
                                                           payer=payer.full_name,
                                                           receiver=receiver.full_name,
-                                                          gruop=group_manager.get_group_by_id(transfer.group_id).title),
+                                                          title=group_manager.get_group_by_id(transfer.group_id).title),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)
@@ -623,19 +672,20 @@ def new_debt(bot, update, chat_data, user_data):
                                                debtor=None,
                                                group_id=group.id)
 
-    group.add_user(user)
+    group.add_telegram_user(update.effective_user)
 
     # Group message
-    keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+    if update.effective_chat.type != "private":
+        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
 
-    update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
-                                       parse_mode=ParseMode.MARKDOWN,
-                                       reply_markup=InlineKeyboardMarkup(keyboard))
+        update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
+                                           parse_mode=ParseMode.MARKDOWN,
+                                           reply_markup=InlineKeyboardMarkup(keyboard))
 
     # Private message
     keyboard = []
     for member in group.user_list[:5]:
-        text = "⚪️ " if member.id != debt.lender else "🔘 ️"
+        text = "⚪️ " if member != debt.lender else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_dbt_le_sel*%d*0*%s" % (member.id,
                                                                                       debt.id))])
@@ -787,6 +837,7 @@ def new_debt_resume(bot, update, user_data):
         update.callback_query.answer(lang.get_text("new_transfer_resume_error_need_receiver"))
         return
 
+    group_manager.get_group_by_id(debt.group_id).add_transaction(debt)
     lender.add_transaction(debt)
     debtor.add_transaction(debt)
 
@@ -797,7 +848,7 @@ def new_debt_resume(bot, update, user_data):
                                                           comment=debt.comment,
                                                           lender=lender.full_name,
                                                           debtor=debtor.full_name,
-                                                          group=group_manager.get_group_by_id(debt.group_id).title),
+                                                          title=group_manager.get_group_by_id(debt.group_id).title),
                                        reply_markup=InlineKeyboardMarkup(keyboard),
                                        parse_mode=ParseMode.MARKDOWN,
                                        disable_web_page_preview=True)

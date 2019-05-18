@@ -38,13 +38,14 @@ def main():
     a(CommandHandler('more', h.more))
     a(CommandHandler('donate', h.donate))
     a(CommandHandler('add', h.add, filters=Filters.group, pass_chat_data=True, pass_user_data=True, pass_args=True))
+    a(CommandHandler('split', h.split, filters=Filters.group, pass_chat_data=True, pass_user_data=True))
     a(CommandHandler('save', h.force_save))
     # MENSAJES
     a(MessageHandler(Filters.status_update.new_chat_members, h.new_members, pass_chat_data=True))
-    a(MessageHandler(Filters.regex(const.RE_AMOUNT_COMMENT_PATTERN) and Filters.group,
+    a(MessageHandler(Filters.regex(pattern=const.RE_AMOUNT_COMMENT_PATTERN) & Filters.group,
                      callback=h.select_transaction_type_group,
                      pass_user_data=True))
-    a(MessageHandler(Filters.regex(const.RE_AMOUNT_COMMENT_PATTERN) and Filters.private,
+    a(MessageHandler(Filters.regex(pattern=const.RE_AMOUNT_COMMENT_PATTERN) & Filters.private,
                      callback=h.select_transaction_type_pm,
                      pass_user_data=True))
     a(MessageHandler(Filters.text, h.message, pass_chat_data=True))
