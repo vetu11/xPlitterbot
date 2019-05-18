@@ -35,8 +35,8 @@ class Group:
             self.transaction_list = new_transaction_list
 
     def to_dict(self):
-        d = self.__dict__
-        d["user_list"] = [x.__repr__() for x in self.user_list]
+        d = dict(self.__dict__)
+        d["user_list"] = [int(x.__repr__()) for x in self.user_list]
         d["transaction_list"] = [x.__repr__() for x in self.transaction_list]
         return d
 
