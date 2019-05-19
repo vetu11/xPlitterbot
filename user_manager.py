@@ -37,7 +37,8 @@ class _UserManager:
 
         new_group = User(**user.__dict__)
         self.user_dict[user.id] = new_group
-        user_data["self"] = new_group
+        if user_data:
+            user_data["self"] = new_group
         return new_group
 
     def get_user_by_id(self, user_id):
