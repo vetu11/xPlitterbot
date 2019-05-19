@@ -21,7 +21,7 @@ class Group:
         self.lang = kwargs.get("lang", "EN-en")  # Idioma del grupo.
 
         # Conversión de ids a instancias de los usuarios.
-        if self.user_list and isinstance(self.user_list[0], str):
+        if self.user_list and isinstance(self.user_list[0], int):
             new_user_list = []
             for user_id in self.user_list:
                 new_user_list.append(user_manager.get_user_by_id(user_id))

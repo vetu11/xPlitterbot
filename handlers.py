@@ -2,7 +2,6 @@
 # Archivo: handlers
 # Descripción: Aquí se declararán los handlers a las distintas llamadas de la API.
 
-import time
 import re
 import const
 import utils
@@ -234,7 +233,7 @@ def select_transaction_type_group(bot, update, user_data):
 
     txt = update.effective_message.text
     if "/add" in txt:
-        txt = txt.replace("/add ", "")
+        txt = utils.join_unicode_list(txt.split()[1:], space=" ")
     amount = txt.split()[0]
     comment = txt.replace(amount + " ", "")
     amount = float(amount)
@@ -832,7 +831,7 @@ def new_debt(bot, update, chat_data, user_data):
     # Private message
     keyboard = []
     for member in group.user_list[:5]:
-        text = "⚪️ " if member != debt.lender else "🔘 ️"
+        text = "⚪️ " if member.id != debt.lender else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_dbt_le_sel*%d*0*%s" % (member.id,
                                                                                       debt.id))])
@@ -1007,13 +1006,13 @@ def new_transaction_cancel(bot, update, user_data):
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
     data = update.callback_query.data
-    purchase_id = data.split("*")[1]
-    transaction_manager.remove_transaction(purchase_id)
+    transaction_id = data.split("*")[1]
+    group = group_manager.get_group_by_id(transaction_manager.get_transaction_by_id(transaction_id).group_id)
+    transaction_manager.remove_transaction(transaction_id)
 
-    # TODO: This keyboard should invite the user to create new transactions.
-    keyboard = [[]]
-
-    update.effective_message.edit_text(lang.get_text("transaction_canceled"))
+    update.effective_message.edit_text(lang.get_text("transaction_canceled", title=group.title),
+                                       parse_mode=ParseMode.MARKDOWN)
+    user_data["editinig"] = group.id
 
 
 # Inline shit
