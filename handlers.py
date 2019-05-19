@@ -1012,7 +1012,7 @@ def new_transaction_cancel(bot, update, user_data):
 
     update.effective_message.edit_text(lang.get_text("transaction_canceled", title=group.title),
                                        parse_mode=ParseMode.MARKDOWN)
-    user_data["editinig"] = group.id
+    user_data["editing"] = group.id
 
 
 # Inline shit
