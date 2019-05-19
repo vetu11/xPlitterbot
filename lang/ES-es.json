@@ -1,5 +1,5 @@
 {
-  "language_version": "0.3.2.1",
+  "language_version": "0.3.3.1",
   "start": "Hola! Bienvenido!",
   "help": "Este es el mensaje de ayuda.",
   "more": "¡He hecho más bots!\n@Pilocobot es un juego picante para beber con tus amigos, o para conocer mejor a los nuevos en la fiesta",
@@ -59,6 +59,8 @@
   "debt_info": "\uD83D\uDCDD *DEUDA*\n\n*Comentario:* {comment}\n*Cantidad:* {amount}\uD83D\uDCB0\n*Debe:* {debtor}\n*A:* {lender}",
   "transaction_deleted": "Se ha eliminado la transacción.",
   "first_pm_the_bot": "Primero tienes que abrir chat privado conmigo, por favor. @{bot_username}",
+  "introduce_error_need_reply": "Envia este comando respondiendo al mensaje de un usuario que me quieras presentar, así sabré que están en el grupo y los podrás añadir a las compras.",
+  "introduce": "¡Hola {target_user_name}! Ahora sé que estás aquí y te podré añadir a las compras",
   "&": " y ",
   ",": ", ",
   ".": "."

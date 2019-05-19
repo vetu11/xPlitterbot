@@ -157,6 +157,35 @@ def split(bot:  Bot, update, chat_data, user_data):
                           disable_web_page_preview=True)
 
 
+def introduce(bot, update: Update, chat_data, user_data):
+    """This command is for intrdoucing new people to the bot. Basically, to make sure they are added to the group,
+    so they can be selected when creating a transaction. User should use this command replying the message
+    of other user."""
+
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
+    user = user_manager.get_user(update.effective_user, user_data)
+    lang = get_lang(user.language_code)
+
+    keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
+
+    if update.effective_message.reply_to_message is None:
+        update.effective_message.reply_text(lang.get_text("introduce_error_need_reply"),
+                                            quote=False,
+                                            parse_mode=ParseMode.MARKDOWN,
+                                            disable_web_page_preview=True,
+                                            reply_markup=InlineKeyboardMarkup(keyboard))
+        return
+
+    target_user = group.add_telegram_user(update.effective_message.reply_to_message.from_user)
+
+    update.effective_message.reply_text(lang.get_text("introduce", target_user_name=target_user.full_name),
+                                        quote=False,
+                                        parse_mode=ParseMode.MARKDOWN,
+                                        disable_web_page_preview=True,
+                                        reply_markup=InlineKeyboardMarkup(keyboard))
+
+
 def history_group(bot, update: Update, chat_data, user_data):
     """/history command. resumes the last transactions."""
 

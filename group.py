@@ -146,6 +146,6 @@ class Group:
 
         user = user_manager.get_user(telegram_user)
         if user in self.user_list:
-            return False
+            return user
         self.user_list.append(user)
-        return True
+        return user

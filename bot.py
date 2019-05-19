@@ -40,6 +40,7 @@ def main():
     a(CommandHandler('add', h.add, filters=Filters.group, pass_chat_data=True, pass_user_data=True, pass_args=True))
     a(CommandHandler('split', h.split, filters=Filters.group, pass_chat_data=True, pass_user_data=True))
     a(CommandHandler('history', h.history_group, filters=Filters.group, pass_user_data=True, pass_chat_data=True))
+    a(CommandHandler('introduce', h.introduce, filters=Filters.group, pass_chat_data=True, pass_user_data=True))
     a(CommandHandler('save', h.force_save))
     # MENSAJES
     a(MessageHandler(Filters.status_update.new_chat_members, h.new_members, pass_chat_data=True))
