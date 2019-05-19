@@ -148,7 +148,7 @@ def split(bot:  Bot, update, chat_data, user_data):
 
     for movement in best_movents:
         movements_text += user_manager.get_user_by_id(movement[0]).full_name + " ----> " + \
-            user_manager.get_user_by_id(movement[1]).full_name + " %s 💰" % abs(movement[2])
+            user_manager.get_user_by_id(movement[1]).full_name + " %s 💰\n" % abs(movement[2])
 
     our_message.edit_text(lang.get_text("split_results",
                                         ledger=ledger_text,
@@ -439,7 +439,8 @@ def new_purchase(bot: Bot, update, chat_data, user_data):
 
         update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
                                            parse_mode=ParseMode.MARKDOWN,
-                                           reply_markup=InlineKeyboardMarkup(keyboard))
+                                           reply_markup=InlineKeyboardMarkup(keyboard),
+                                           disable_web_page_preview=True)
 
     # Mensaje PM
     keyboard = []
