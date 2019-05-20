@@ -435,7 +435,8 @@ def new_purchase(bot: Bot, update, chat_data, user_data):
 
     # Mensaje al grupo
     if update.effective_chat.type != "private":
-        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)],
+                    [InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
 
         update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
                                            parse_mode=ParseMode.MARKDOWN,
@@ -645,7 +646,8 @@ def new_transfer(bot, update, chat_data, user_data):
 
     # Group message
     if update.effective_chat.type != "private":
-        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)],
+                    [InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
 
         update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
                                            parse_mode=ParseMode.MARKDOWN,
@@ -853,7 +855,8 @@ def new_debt(bot, update, chat_data, user_data):
 
     # Group message
     if update.effective_chat.type != "private":
-        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)]]
+        keyboard = [[InlineKeyboardButton(lang.get_text("goto_pm"), url="t.me/%s" % const.aux.bot_username)],
+                    [InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
 
         update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
                                            parse_mode=ParseMode.MARKDOWN,
@@ -1049,6 +1052,7 @@ def new_transaction_cancel(bot, update, user_data):
 
 # Inline shit
 def valid_inline_query(bot, update, user_data):
+    """DEPRECATED"""
     # Devuelve resultados a la query que se ha recibido, que tendrá un formato correcto "<cantidad> <comentario>"
     # DEPRECATED: Las funciones de inline_query han sido desactivadas en el bot.
 
@@ -1088,6 +1092,7 @@ def valid_inline_query(bot, update, user_data):
 
 
 def not_valid_inline_query(bot, update, user_data):
+    """DEPRECATED"""
     # Contesta a una inline_query con formato incorrecto, sugeriendo cómo hacerlo.
     # DEPRECATED: Las funciones de inline_query han sido desactivadas en el bot.
 
