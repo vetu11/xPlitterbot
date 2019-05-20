@@ -150,11 +150,14 @@ def split(bot:  Bot, update, chat_data, user_data):
         movements_text += user_manager.get_user_by_id(movement[0]).full_name + " ----> " + \
             user_manager.get_user_by_id(movement[1]).full_name + " %s 💰\n" % abs(movement[2])
 
+    keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
+
     our_message.edit_text(lang.get_text("split_results",
                                         ledger=ledger_text,
                                         movements=movements_text),
                           parse_mode=ParseMode.MARKDOWN,
-                          disable_web_page_preview=True)
+                          disable_web_page_preview=True,
+                          reply_markup=InlineKeyboardMarkup(keyboard))
 
 
 def introduce(bot, update: Update, chat_data, user_data):
@@ -203,6 +206,7 @@ def history_group(bot, update: Update, chat_data, user_data):
         method = update.effective_message.reply_text
 
     keyboard = _history_transactions_buttons(group.transaction_list, page)
+    keyboard.append([InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")])
 
     if len(group.transaction_list) > 0:
         method(text=lang.get_text("history_group"),
@@ -211,9 +215,11 @@ def history_group(bot, update: Update, chat_data, user_data):
                reply_markup=InlineKeyboardMarkup(keyboard))
         return
     else:
+        keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
         method(text=lang.get_text("history_empty"),
                parse_mode=ParseMode.MARKDOWN,
-               disable_web_page_preview=True)
+               disable_web_page_preview=True,
+               reply_markup=InlineKeyboardMarkup(keyboard))
 
 
 def force_save(bot, update):
@@ -271,7 +277,8 @@ def select_transaction_type_group(bot, update, user_data):
                                                                                                  comment))[:64]),
                  InlineKeyboardButton(lang.get_text("transfer"), callback_data=("n_tra*%s*%s" % (amount,
                                                                                                  comment))[:64]),
-                 InlineKeyboardButton(lang.get_text("debt"), callback_data=("n_dbt*%s*%s" % (amount, comment))[:64])]]
+                 InlineKeyboardButton(lang.get_text("debt"), callback_data=("n_dbt*%s*%s" % (amount, comment))[:64])],
+                [InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
 
     update.effective_message.reply_text(lang.get_text("select_transaction_type_message",
                                                       amount=amount,
