@@ -42,6 +42,7 @@ class Group:
 
     def refresh_expiration_date(self):
         # Aumenta la fecha de caducidad de un grupo cuando se usa.
+        self.check_duplicated_users()
         self.expiration_date += const.REFRESH_RATE_GRUPO
 
         if self.expiration_date < time.time() + const.MINIMUN_REFRESH_RATE_GRUPO:
