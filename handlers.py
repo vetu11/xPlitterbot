@@ -11,7 +11,7 @@ from lang import get_lang
 from telegram import ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, InlineQueryResultArticle,\
     InputTextMessageContent, ForceReply, Bot, Update, ChatAction
 from telegram.ext import run_async
-from telegram.error import Unauthorized
+from telegram.error import Unauthorized, BadRequest
 
 from group_manager import group_manager
 from user_manager import user_manager
@@ -54,7 +54,7 @@ def _check_pm_ready(bot, update, lang):
     try:
         bot.send_chat_action(update.effective_user.id, ChatAction.TYPING)
         return True
-    except Unauthorized:
+    except (Unauthorized, BadRequest):
         update.callback_query.answer(lang.get_text("first_pm_the_bot", bot_username=const.aux.bot_username),
                                      show_alert=True)
         return False
