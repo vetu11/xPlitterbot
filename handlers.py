@@ -265,7 +265,7 @@ def select_transaction_type_group(bot, update, user_data):
         txt = utils.join_unicode_list(txt.split()[1:], space=" ")
     amount = txt.split()[0]
     comment = txt.replace(amount + " ", "")
-    amount = float(amount)
+    amount = float(amount.replace(",", "."))
 
     keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data=("n_pur*%s*%s" % (amount,
                                                                                                  comment))[:64]),
@@ -649,7 +649,8 @@ def new_transfer(bot, update, chat_data, user_data):
 
         update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
                                            parse_mode=ParseMode.MARKDOWN,
-                                           reply_markup=InlineKeyboardMarkup(keyboard))
+                                           reply_markup=InlineKeyboardMarkup(keyboard),
+                                           disable_web_page_preview=True)
 
     # Private message
     keyboard = []
@@ -856,7 +857,8 @@ def new_debt(bot, update, chat_data, user_data):
 
         update.effective_message.edit_text(lang.get_text("goto_pm_message", bot_username=const.aux.bot_username),
                                            parse_mode=ParseMode.MARKDOWN,
-                                           reply_markup=InlineKeyboardMarkup(keyboard))
+                                           reply_markup=InlineKeyboardMarkup(keyboard),
+                                           disable_web_page_preview=True)
 
     # Private message
     keyboard = []
