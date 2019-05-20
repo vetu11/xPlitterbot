@@ -149,3 +149,9 @@ class Group:
             return user
         self.user_list.append(user)
         return user
+
+    def check_duplicated_users(self):
+        """This is a workaround for a bug that was probably fixed unintentionally but we need to make sure this
+        doesn't happen again. It makes sure no user is duplicated."""
+
+        self.user_list = list(set(self.user_list))
