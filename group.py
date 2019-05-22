@@ -172,6 +172,8 @@ class Group:
                     if most_expensive.amount < purchase.amount:
                         most_expensive = purchase
 
+        if most_expensive is None:
+            return False
         return {"amount": most_expensive.amount, "comment": most_expensive.comment}
 
     def find_user_in_most_purchases_as_participant(self):
@@ -191,9 +193,11 @@ class Group:
 
         ranking.sort()
 
+        if not ranking:
+            return False
         return user_manager.get_user_by_id(ranking[-1][1]).full_name_simple
 
-    def find_user_in_most_purchase_as_buyer(self):
+    def find_user_in_most_purchases_as_buyer(self):
         """Returns the full_name_simple of the user in purchases as buyer."""
 
         pre_ranking = {}
@@ -209,6 +213,8 @@ class Group:
 
         ranking.sort()
 
+        if not ranking:
+            return False
         return user_manager.get_user_by_id(ranking[-1][1]).full_name_simple
 
     def total_spent(self):

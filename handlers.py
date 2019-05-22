@@ -64,21 +64,37 @@ def _check_pm_ready(bot, update, lang):
 
 def _random_fact(group: Group, lang):
 
-    fact_atributes = {"fact_0": {"amount": Group.total_spent},
+    abalible_facts = {"fact_0": {"amount": Group.total_spent},
                       "fact_1": {"amount": Group.total_transferred},
                       "fact_2": {"_all": Group.find_most_expensive_purchase},
                       "fact_3": {"name_simple": Group.find_user_in_most_purchases_as_participant},
-                      "fact_4": {"name_simple": Group.find_user_in_most_purchase_as_buyer}}
-    chosen_fact = "fact_" + str(random.randint(0, 4))
-    atributes = {}
+                      "fact_4": {"name_simple": Group.find_user_in_most_purchases_as_buyer}}
 
-    for k in fact_atributes[chosen_fact]:
-        if k != "_all":
-            atributes[k] = fact_atributes[chosen_fact][k](group)
+    while abalible_facts:
+        chosen_fact = random.choice(abalible_facts)
+        atributes = {}
+        is_abalible = True
+
+        for k in abalible_facts[chosen_fact]:
+            if k != "_all":
+                atributes[k] = abalible_facts[chosen_fact][k](group)
+                if atributes[k] is False:
+                    is_abalible = False
+            else:
+                result = abalible_facts[chosen_fact][k](group)
+                atributes.update(result)
+                if result is False:
+                    is_abalible = False
+
+        if is_abalible:
+            return
         else:
-            atributes.update(fact_atributes[chosen_fact][k](group))
+            abalible_facts.pop(chosen_fact)
 
-    return lang.get_text(chosen_fact, **atributes)
+    if abalible_facts:
+        return lang.get_text(chosen_fact, **atributes)
+    else:
+        return "stop"
 
 
 def generic_message(bot, update, text_code):
@@ -261,7 +277,7 @@ def force_save(bot, update):
     update.effective_message.reply_text("Guardado.")
 
 
-def auto_save(**kwargs):
+def auto_save(*args, **kwargs):
     """Called with the interval defined on bot.py, or when the bot is stopping"""
 
     user_manager.save()
