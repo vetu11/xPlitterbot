@@ -93,12 +93,10 @@ class Group:
             i = 0
 
             while True:
-                print(i)
                 if positive[0][0] >= -negative[i][0]:
                     suggested_transfers.append((negative[i][1], positive[0][1], negative[i][0]))
                     tranfered = negative[i][0]
                     balance = positive[0][0] + tranfered
-                    print("balance %d" % balance)
                     if balance != 0:
                         positive.append((balance, positive[0][1]))
                     positive.pop(0)
@@ -160,3 +158,75 @@ class Group:
         # Just to know the bug still happens, we send a message to the admin when it does happen.
         if start_len != len(self.user_list):
             const.aux.bot.send_message(const.VETU_ID, "Se han encontrado usuarios repetidos en %s" % self.title)
+
+    def find_most_expensive_purchase(self):
+        """Returns a dict with the comment and amount of the most expensive purchase of the group."""
+
+        most_expensive = None
+
+        for purchase in self.transaction_list:
+            if purchase.type == "purchase":
+                if most_expensive is None:
+                    most_expensive = purchase
+                else:
+                    if most_expensive.amount < purchase.amount:
+                        most_expensive = purchase
+
+        return {"amount": most_expensive.amount, "comment": most_expensive.comment}
+
+    def find_user_in_most_purchases_as_participant(self):
+        """Returns the full_name_simple of the user in purchases as participant."""
+
+        pre_ranking = {}
+
+        for transaction in self.transaction_list:
+            if transaction.type == "purchase":
+                for user_id in transaction.participants:
+                    pre_ranking[user_id] = pre_ranking.get(user_id, 0) + 1
+
+        ranking = []
+
+        for user_id in pre_ranking:
+            ranking.append((pre_ranking[user_id], user_id))
+
+        ranking.sort()
+
+        return user_manager.get_user_by_id(ranking[-1][1]).full_name_simple
+
+    def find_user_in_most_purchase_as_buyer(self):
+        """Returns the full_name_simple of the user in purchases as buyer."""
+
+        pre_ranking = {}
+
+        for transaction in self.transaction_list:
+            if transaction.type == "purchase":
+                pre_ranking[transaction.buyer] = pre_ranking.get(transaction.buyer, 0) + 1
+
+        ranking = []
+
+        for user_id in pre_ranking:
+            ranking.append((pre_ranking[user_id], user_id))
+
+        ranking.sort()
+
+        return user_manager.get_user_by_id(ranking[-1][1]).full_name_simple
+
+    def total_spent(self):
+        """Returns the amount spent on all the purchases of the group."""
+
+        amount = 0
+        for purchase in self.transaction_list:
+            if purchase.type == "purchase":
+                amount += purchase.amount
+
+        return amount
+
+    def total_transferred(self):
+        """Returns the amount transferred on all the transfers of the group."""
+
+        amount = 0
+        for transfer in self.transaction_list:
+            if transfer.type == "transfer":
+                amount += transfer.amount
+
+        return amount

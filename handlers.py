@@ -5,6 +5,7 @@
 import re
 import const
 import utils
+import random
 from math import ceil
 from lang import get_lang
 
@@ -13,6 +14,7 @@ from telegram import ParseMode, InlineKeyboardButton, InlineKeyboardMarkup, Inli
 from telegram.ext import run_async
 from telegram.error import Unauthorized, BadRequest
 
+from group import Group
 from group_manager import group_manager
 from user_manager import user_manager
 from transaction_manager import transaction_manager
@@ -60,6 +62,25 @@ def _check_pm_ready(bot, update, lang):
         return False
 
 
+def _random_fact(group: Group, lang):
+
+    fact_atributes = {"fact_0": {"amount": Group.total_spent},
+                      "fact_1": {"amount": Group.total_transferred},
+                      "fact_2": {"_all": Group.find_most_expensive_purchase},
+                      "fact_3": {"name_simple": Group.find_user_in_most_purchases_as_participant},
+                      "fact_4": {"name_simple": Group.find_user_in_most_purchase_as_buyer}}
+    chosen_fact = "fact_" + str(random.randint(0, 4))
+    atributes = {}
+
+    for k in fact_atributes[chosen_fact]:
+        if k != "_all":
+            atributes[k] = fact_atributes[chosen_fact][k](group)
+        else:
+            atributes.update(fact_atributes[chosen_fact][k](group))
+
+    return lang.get_text(chosen_fact, **atributes)
+
+
 def generic_message(bot, update, text_code):
     # Responde a cualquier mensaje con un texto genérico, sin añadiduras.
 
@@ -102,6 +123,7 @@ def donate(bot, update):
 def error_handler(bot, update, telegram_error):
     bot.send_message(const.VETU_ID, "ERROR:\nUpdate:\n" + str(update) + "\ntelegram_error:\n" + telegram_error)
 
+
 # Bot Commands
 def add(bot, update, args, chat_data, user_data):
     # Pide más datos o crea una transacción con los datos proporcionados.
@@ -128,8 +150,10 @@ def split(bot:  Bot, update, chat_data, user_data):
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
 
+    fact = _random_fact(group, lang)
+
     # Phase 1, calculate ledger
-    our_message = update.effective_message.reply_text(lang.get_text("split_phase_1_calculating"),
+    our_message = update.effective_message.reply_text(lang.get_text("split_phase_1_calculating", fact=fact),
                                                       parse_mode=ParseMode.MARKDOWN)
     bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
     group.calculate_ledger()
@@ -141,7 +165,7 @@ def split(bot:  Bot, update, chat_data, user_data):
                        str(group.ledger[member_id]) + "💰\n"
 
     # Phase 2, calculate movements
-    our_message.edit_text(lang.get_text("split_phase_2_calculating", ledger=ledger_text),
+    our_message.edit_text(lang.get_text("split_phase_2_calculating", ledger=ledger_text, fact=fact),
                           parse_mode=ParseMode.MARKDOWN,
                           disable_web_page_preview=True)
     bot.send_chat_action(update.effective_chat.id, ChatAction.TYPING)
@@ -157,7 +181,8 @@ def split(bot:  Bot, update, chat_data, user_data):
 
     our_message.edit_text(lang.get_text("split_results",
                                         ledger=ledger_text,
-                                        movements=movements_text),
+                                        movements=movements_text,
+                                        fact=fact),
                           parse_mode=ParseMode.MARKDOWN,
                           disable_web_page_preview=True,
                           reply_markup=InlineKeyboardMarkup(keyboard))
@@ -327,8 +352,8 @@ def select_transaction_type_pm(bot, update, user_data):
 
 def message(bot, update, chat_data):
     # Se ejecuta cuando recibe un mensaje cualquiera que no haya pasado los filtros, sólo para debugging.
-
-    print(update.effective_message.text)
+    pass
+    # print(update.effective_message.text)
 
 
 # Inline buttons
