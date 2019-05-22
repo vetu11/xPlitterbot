@@ -261,7 +261,7 @@ def force_save(bot, update):
     update.effective_message.reply_text("Guardado.")
 
 
-def auto_save():
+def auto_save(**kwargs):
     """Called with the interval defined on bot.py, or when the bot is stopping"""
 
     user_manager.save()
