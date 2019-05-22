@@ -31,6 +31,9 @@ class _Aux:
     # de evitar importaciones circulares.
 
     def __init__(self):
+        self.bot_username = None
+        self.bot_id = None
+        self.bot = None
         pass
 
 

@@ -99,6 +99,9 @@ def donate(bot, update):
     generic_message(bot, update, "donate")
 
 
+def error_handler(bot, update, telegram_error):
+    bot.send_message(const.VETU_ID, "ERROR:\nUpdate:\n" + str(update) + "\ntelegram_error:\n" + telegram_error)
+
 # Bot Commands
 def add(bot, update, args, chat_data, user_data):
     # Pide más datos o crea una transacción con los datos proporcionados.
@@ -231,6 +234,14 @@ def force_save(bot, update):
     group_manager.save()
 
     update.effective_message.reply_text("Guardado.")
+
+
+def auto_save():
+    """Called with the interval defined on bot.py, or when the bot is stopping"""
+
+    user_manager.save()
+    transaction_manager.save()
+    group_manager.save()
 
 
 # Other Messages
@@ -886,7 +897,7 @@ def new_debt(bot, update, chat_data, user_data):
                                                                  (int(ceil(len(group.user_list) / 5.0)), debt.id))])
 
     keyboard.append([InlineKeyboardButton(lang.get_text("confirm"),
-                                          callback_data="n_dbt_le_p*0*%s" % debt.id),
+                                          callback_data="n_dbt_de_p*0*%s" % debt.id),
                      InlineKeyboardButton(lang.get_text("cancel"),
                                           callback_data="n_trc_c*%s" % debt.id)])
 

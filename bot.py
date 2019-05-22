@@ -18,6 +18,7 @@ logger = logging.getLogger(__name__)
 def stop_bot(updater):
     # Función que da la señal al updater para que deje de hacer pooling
     logger.info("Apagando bot...")
+    h.auto_save()
     updater.stop()
     logger.info("Bot apagado")
 
@@ -29,6 +30,7 @@ def main():
     get_me_bot = updater.bot.get_me()
     const.aux.bot_id = get_me_bot.id
     const.aux.bot_username = get_me_bot.username
+    const.aux.bor = updater.bot
     del get_me_bot
 
     # Asignación de handlers
@@ -73,6 +75,10 @@ def main():
     # INLINE SHIT
     a(InlineQueryHandler(h.valid_inline_query, pass_user_data=True, pattern=r"\d+((\.|,)\d+)* (\w *)+"))
     a(InlineQueryHandler(h.not_valid_inline_query, pass_user_data=True))
+
+    updater.dispatcher.add_error_handler(h.error_handler)
+
+    updater.job_queue.run_repeating(h.auto_save, 3600)
 
     # Iniciar bot, comenzar a hacer pooling
     updater.start_polling()
