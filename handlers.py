@@ -65,10 +65,10 @@ def _check_pm_ready(bot, update, lang):
 def _random_fact(group: Group, lang):
 
     available_facts = {"fact_0": {"amount": Group.total_spent},
-                      "fact_1": {"amount": Group.total_transferred},
-                      "fact_2": {"_all": Group.find_most_expensive_purchase},
-                      "fact_3": {"name_simple": Group.find_user_in_most_purchases_as_participant},
-                      "fact_4": {"name_simple": Group.find_user_in_most_purchases_as_buyer}}
+                       "fact_1": {"amount": Group.total_transferred},
+                       "fact_2": {"_all": Group.find_most_expensive_purchase},
+                       "fact_3": {"name_simple": Group.find_user_in_most_purchases_as_participant},
+                       "fact_4": {"name_simple": Group.find_user_in_most_purchases_as_buyer}}
 
     while available_facts:
         chosen_fact = random.choice([k for k in available_facts])
@@ -80,11 +80,13 @@ def _random_fact(group: Group, lang):
                 atributes[k] = available_facts[chosen_fact][k](group)
                 if atributes[k] is False:
                     is_available = False
+                    break
             else:
                 result = available_facts[chosen_fact][k](group)
-                atributes.update(result)
                 if result is False:
                     is_available = False
+                    break
+                atributes.update(result)
 
         if is_available:
             break
