@@ -64,37 +64,37 @@ def _check_pm_ready(bot, update, lang):
 
 def _random_fact(group: Group, lang):
 
-    abalible_facts = {"fact_0": {"amount": Group.total_spent},
+    available_facts = {"fact_0": {"amount": Group.total_spent},
                       "fact_1": {"amount": Group.total_transferred},
                       "fact_2": {"_all": Group.find_most_expensive_purchase},
                       "fact_3": {"name_simple": Group.find_user_in_most_purchases_as_participant},
                       "fact_4": {"name_simple": Group.find_user_in_most_purchases_as_buyer}}
 
-    while abalible_facts:
-        chosen_fact = random.choice(abalible_facts)
+    while available_facts:
+        chosen_fact = random.choice([k for k in available_facts])
         atributes = {}
-        is_abalible = True
+        is_available = True
 
-        for k in abalible_facts[chosen_fact]:
+        for k in available_facts[chosen_fact]:
             if k != "_all":
-                atributes[k] = abalible_facts[chosen_fact][k](group)
+                atributes[k] = available_facts[chosen_fact][k](group)
                 if atributes[k] is False:
-                    is_abalible = False
+                    is_available = False
             else:
-                result = abalible_facts[chosen_fact][k](group)
+                result = available_facts[chosen_fact][k](group)
                 atributes.update(result)
                 if result is False:
-                    is_abalible = False
+                    is_available = False
 
-        if is_abalible:
-            return
+        if is_available:
+            break
         else:
-            abalible_facts.pop(chosen_fact)
+            available_facts.pop(chosen_fact)
 
-    if abalible_facts:
+    if available_facts:
         return lang.get_text(chosen_fact, **atributes)
     else:
-        return "stop"
+        return ""
 
 
 def generic_message(bot, update, text_code):

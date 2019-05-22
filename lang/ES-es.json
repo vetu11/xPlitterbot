@@ -1,5 +1,5 @@
 {
-  "language_version": "0.4.1.0",
+  "language_version": "0.4.1.1",
   "start": "\uD83D\uDC4B ¡Hola! Soy @xPlitterbot, puedo dividir los gastos de los grupos con tus amigos.\n\nPara comenzar, invitame a un grupo del que quieras repartir los gastos, y añade una compra con /add. Después, podrás dividir los gastos con /split, calcularé quién debe cuánto, y cómo resolver las deudas rápidamente.",
   "help": "ℹ️ *CÓMO USARME:*\nAñademe a un grupo, pulad todos el botón \"Decir hola\" y usad /add para añadir una compra o transferencia. Luego, con /slit calcularé las deudas y cómo resolverlas rápidamente.\n\n\uD83D\uDC65 *COMANDOS DE GRUPO:*\n/add `[coste] [comentario]`  - Para añadir una compra, transferencia o deuda.\n/split  - Para resumir las deudas y cómo resolverlas.\n/history  - Para ver el historial de transacciones del grupo, y borrarlas si es necesario.\n/introduce  - Muestra el botón de \"Decir Hola\"\n\n\uD83C\uDF10 *COMANDOS GLOBALES:*\n/help  - Este mensaje de ayuda.\n/more  - Más bots de @vetubots\n/donate  - Donar para el mantenimiento de los bots ❤️",
   "more": "¡He hecho más bots!\n@Pilocobot es un juego picante para beber con tus amigos, o para conocer mejor a los nuevos en la fiesta\n@QuienVienebot es un bot integrado para saber rápidamente quienes y cuantos van a una quedad o evento.\n@SinSentidobot Otro bot integrado con el que puedes dicir cosas que parecen decir mucho pero no dicen nada en absoluto.",
@@ -63,7 +63,7 @@
   "introduce": "¡Hola {target_user_name}! Ahora sé que estás aquí y te podré añadir a las compras",
   "fact_0": "Se han gastado *{amount}*\uD83D\uDCB0 en todas las compras del grupo",
   "fact_1": "Se han transferido *{amount}*\uD83D\uDCB0 en este grupo",
-  "fact_2": "La compra de mayor coste  es {comment} por {amount} \uD83D\uDCB0",
+  "fact_2": "La compra de mayor coste es {comment} por {amount} \uD83D\uDCB0",
   "fact_3": "{name_simple} es la persona que participa en más compras",
   "fact_4": "{name_simple} ha comprado más cosas que nadie",
   "&": " y ",
