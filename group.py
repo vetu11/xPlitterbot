@@ -89,7 +89,7 @@ class Group:
         positive.sort(reverse=True)
         negative.sort()
 
-        while len(positive) or len(negative):
+        while len(positive) and len(negative):
             i = 0
 
             while True:
@@ -97,7 +97,7 @@ class Group:
                     suggested_transfers.append((negative[i][1], positive[0][1], negative[i][0]))
                     tranfered = negative[i][0]
                     balance = positive[0][0] + tranfered
-                    if balance != 0:
+                    if balance > 0.00:  # It was != 0, but floats are not enough precise sometimes...
                         positive.append((balance, positive[0][1]))
                     positive.pop(0)
                     negative.pop(i)

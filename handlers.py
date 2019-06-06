@@ -179,8 +179,8 @@ def split(bot:  Bot, update, chat_data, user_data):
     ledger_text = ""
 
     for member_id in group.ledger:
-        ledger_text += "" + user_manager.get_user_by_id(member_id).full_name + " " + \
-                       str(group.ledger[member_id]) + "💰\n"
+        ledger_text += "" + user_manager.get_user_by_id(member_id).full_name + \
+                       " %.2f 💰\n" % group.ledger[member_id]
 
     # Phase 2, calculate movements
     our_message.edit_text(lang.get_text("split_phase_2_calculating", ledger=ledger_text, fact=fact),
@@ -193,7 +193,7 @@ def split(bot:  Bot, update, chat_data, user_data):
 
     for movement in best_movents:
         movements_text += user_manager.get_user_by_id(movement[0]).full_name + " ----> " + \
-            user_manager.get_user_by_id(movement[1]).full_name + " %s 💰\n" % abs(movement[2])
+            user_manager.get_user_by_id(movement[1]).full_name + " %.2f 💰\n" % abs(movement[2])
 
     keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
 
