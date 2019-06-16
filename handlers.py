@@ -35,7 +35,7 @@ def _history_transactions_buttons(transaction_list, page):
 
     for transaction in transaction_list[t_min:t_max]:
         button_text = type_to_symbol[transaction.type] + "%s💰 %s\n" % (transaction.amount,
-                                                                         transaction.comment[:10])
+                                                                        transaction.comment[:20])
         keyboard.append([InlineKeyboardButton(button_text, callback_data="tr*%s*%s" % (transaction.id, page))])
 
     if len(transaction_list) > const.TRANSACTIONS_PER_PAGE_HISTORY:
@@ -139,7 +139,7 @@ def donate(bot, update):
 
 
 def error_handler(bot, update, telegram_error):
-    bot.send_message(const.VETU_ID, "ERROR:\nUpdate:\n" + str(update) + "\ntelegram_error:\n" + telegram_error)
+    bot.send_message(const.VETU_ID, "ERROR:\nUpdate:\n" + str(update) + "\ntelegram_error:\n" + str(telegram_error))
 
 
 # Bot Commands
@@ -354,6 +354,7 @@ def select_transaction_type_pm(bot, update, user_data):
         txt = txt.replace("/add ", "")
     amount = txt.split()[0]
     comment = txt.replace(str(amount) + " ", "")
+    amount = float(amount.replace(",", "."))
 
     keyboard = [[InlineKeyboardButton(lang.get_text("purchase"), callback_data=("n_pur*%s*%s" % (amount,
                                                                                                  comment))[:64]),
