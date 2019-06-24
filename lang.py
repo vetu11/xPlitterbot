@@ -6,8 +6,8 @@
 import json
 
 
-_IDIOMAS_DISPONIBLES = ["ES-es"]
-_SINONIMOS_IDIOMAS = {"es": "ES-es"}
+_IDIOMAS_DISPONIBLES = ["ES-es", "EN-en"]
+_SINONIMOS_IDIOMAS = {"es": "ES-es", "en": "EN-en"}
 _langs_iniciados = {}
 
 
@@ -16,7 +16,7 @@ class Lang:
 
     def __init__(self, lang_code="ES-es"):
 
-        if lang_code is _SINONIMOS_IDIOMAS:
+        if lang_code in _SINONIMOS_IDIOMAS:
             lang_code = _SINONIMOS_IDIOMAS[lang_code]
         elif lang_code is not _IDIOMAS_DISPONIBLES:
             lang_code = "ES-es"
