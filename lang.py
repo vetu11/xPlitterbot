@@ -19,7 +19,7 @@ class Lang:
         if lang_code in _SINONIMOS_IDIOMAS:
             lang_code = _SINONIMOS_IDIOMAS[lang_code]
         elif lang_code is not _IDIOMAS_DISPONIBLES:
-            lang_code = "ES-es"
+            lang_code = "EN-en"
 
         with open("lang/%s.json" % lang_code, encoding="utf-8") as f:
             self.texts = json.load(f)
