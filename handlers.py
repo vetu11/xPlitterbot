@@ -21,6 +21,8 @@ from transaction_manager import transaction_manager
 
 re_amount_comment = re.compile(const.RE_AMOUNT_COMMENT_PATTERN)
 
+UPPNT = const.USERS_PER_PAGE_NEW_TRANSACTION
+
 
 def _history_transactions_buttons(transaction_list, page):
     type_to_symbol = {"purchase": "🛒", "transfer": "💸", "debt": "📝"}
@@ -512,7 +514,7 @@ def new_purchase(bot: Bot, update, chat_data, user_data):
         keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
                                               callback_data="n_pur_bu_sel*%d*0*%s" % (participant.id,
                                                                                         purchase.id))])
-    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
+    if len(group.user_list) > UPPNT:
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_pur_bu_p*0*%s" % purchase.id),
                          InlineKeyboardButton("⬅️", callback_data="n_pur_bu_p*0*%s" % purchase.id),
                          InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=0)),
@@ -534,7 +536,6 @@ def new_purchase(bot: Bot, update, chat_data, user_data):
 
 def new_purchase_buyer(bot, update, user_data):
     # Para seleccionar el comprador de la transacción que se señala en callba_query.data
-
     user = user_manager.get_user(update.effective_user, user_data)
     lang = get_lang(user.language_code)
     data = update.callback_query.data
@@ -558,14 +559,14 @@ def new_purchase_buyer(bot, update, user_data):
     group = group_manager.get_group_by_id(purchase.group_id)
 
     keyboard = []
-    for member in group.user_list[5 * page:5 + 5 * page]:
+    for member in group.user_list[UPPNT * page:UPPNT + UPPNT * page]:
         text = "⚪️ " if member.id != purchase.buyer else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_pur_bu_sel*%d*%d*%s" % (member.id,
                                                                                        page,
                                                                                        purchase.id))])
-    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
-        last_page = int(ceil(len(group.user_list) / const.USERS_PER_PAGE_NEW_TRANSACTION)) - 1
+    if len(group.user_list) > UPPNT:
+        last_page = int(ceil(len(group.user_list) / UPPNT)) - 1
         next_page = last_page if page >= last_page else page + 1
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_pur_bu_p*0*%s" % purchase.id),
                          InlineKeyboardButton("⬅️", callback_data="n_pur_bu_p*%d*%s" % (0 if page <= 0 else page - 1,
@@ -607,18 +608,18 @@ def new_purchase_participants(bot, update, user_data):
     page = int(page)
 
     group = group_manager.get_group_by_id(purchase.group_id)
-    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
-    next_page = last_page if page >= last_page else page + 1
 
     keyboard = []
-    for member in group.user_list[5 * page:5 + 5 * page]:
+    for member in group.user_list[UPPNT * page:UPPNT + UPPNT * page]:
         text = "❎ " if member.id not in purchase.participants else "☑️ "
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_pur_pa_sel*%d*%d*%s" % (member.id,
                                                                                        page,
                                                                                        purchase.id))])
 
-    if len(group.user_list) > 5:
+    if len(group.user_list) > UPPNT:
+        last_page = int(ceil(len(group.user_list) / UPPNT)) - 1
+        next_page = last_page if page >= last_page else page + 1
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_pur_pa_p*0*%s" % purchase.id),
                          InlineKeyboardButton("⬅️", callback_data="n_pur_pa_p*%d*%s" % (0 if page <= 0 else page - 1,
                                                                                         purchase.id)),
@@ -718,12 +719,12 @@ def new_transfer(bot, update, chat_data, user_data):
 
     # Private message
     keyboard = []
-    for participant in group.user_list[:5]:
+    for participant in group.user_list[:UPPNT]:
         text = "⚪️ " if participant.id != transfer.payer else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + participant.full_name_simple,
                                               callback_data="n_tra_pa_sel*%d*0*%s" % (participant.id,
                                                                                       transfer.id))])
-    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
+    if len(group.user_list) > UPPNT:
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_tra_pa_p*0*%s" % transfer.id),
                          InlineKeyboardButton("⬅️", callback_data="n_tra_pa_p*0*%s" % transfer.id),
                          InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=0)),
@@ -767,17 +768,17 @@ def new_transfer_payer(bot, update, user_data):
     page = int(page)
 
     group = group_manager.get_group_by_id(transfer.group_id)
-    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
-    next_page = last_page if page >= last_page else page + 1
 
     keyboard = []
-    for member in group.user_list[5 * page:5 + 5 * page]:
+    for member in group.user_list[UPPNT * page:UPPNT + UPPNT * page]:
+        last_page = int(ceil(len(group.user_list) / UPPNT)) - 1
+        next_page = last_page if page >= last_page else page + 1
         text = "⚪️ " if member.id != transfer.payer else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_tra_pa_sel*%d*%d*%s" % (member.id,
                                                                                        page,
                                                                                        transfer.id))])
-    if len(group.user_list) > 5:
+    if len(group.user_list) > UPPNT:
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_tra_pa_p*0*%s" % transfer.id),
                          InlineKeyboardButton("⬅️", callback_data="n_tra_pa_p*%d*%s" % (0 if page <= 0 else page - 1,
                                                                                         transfer.id)),
@@ -818,9 +819,6 @@ def new_transfer_receiver(bot, update, user_data):
     page = int(page)
 
     group = group_manager.get_group_by_id(transfer.group_id)
-    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
-    next_page = last_page if page >= last_page else page + 1
-
     keyboard = []
     for member in group.user_list[5 * page:5 + 5 * page]:
         text = "⚪️" if member.id != transfer.receiver else "🔘 ️"
@@ -829,7 +827,9 @@ def new_transfer_receiver(bot, update, user_data):
                                                                                        page,
                                                                                        transfer.id))])
 
-    if len(group.user_list) > 5:
+    if len(group.user_list) > UPPNT:
+        last_page = int(ceil(len(group.user_list) / 5.0)) - 1
+        next_page = last_page if page >= last_page else page + 1
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_tra_re_p*0*%s" % transfer.id),
                          InlineKeyboardButton("⬅️", callback_data="n_tra_re_p*%d*%s" % (0 if page <= 0 else page - 1,
                                                                                         transfer.id)),
@@ -927,12 +927,12 @@ def new_debt(bot, update, chat_data, user_data):
 
     # Private message
     keyboard = []
-    for member in group.user_list[:5]:
+    for member in group.user_list[:UPPNT]:
         text = "⚪️ " if member.id != debt.lender else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_dbt_le_sel*%d*0*%s" % (member.id,
                                                                                       debt.id))])
-    if len(group.user_list) > const.USERS_PER_PAGE_NEW_TRANSACTION:
+    if len(group.user_list) > UPPNT:
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_dbt_le_p*0*%s" % debt.id),
                          InlineKeyboardButton("⬅️", callback_data="n_dbt_le_p*0*%s" % debt.id),
                          InlineKeyboardButton("0️⃣", callback_data="none*%s" % lang.get_text("page", page=0)),
@@ -978,7 +978,7 @@ def new_debt_lender(bot, update, user_data):
     page = int(page)
 
     group = group_manager.get_group_by_id(debt.group_id)
-    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
+    last_page = int(ceil(len(group.user_list) / UPPNT)) - 1
     next_page = last_page if page >= last_page else page + 1
 
     keyboard = []
@@ -988,7 +988,7 @@ def new_debt_lender(bot, update, user_data):
                                               callback_data="n_dbt_le_sel*%d*%d*%s" % (member.id,
                                                                                        page,
                                                                                        debt.id))])
-    if len(group.user_list) > 5:
+    if len(group.user_list) > UPPNT:
         keyboard.append([InlineKeyboardButton("⏪", callback_data="n_dbt_le_p*0*%s" % debt.id),
                          InlineKeyboardButton("⬅️", callback_data="n_dbt_le_p*%d*%s" % (0 if page <= 0 else page - 1,
                                                                                         debt.id)),
@@ -1030,11 +1030,11 @@ def new_debt_debtor(bot, update, user_data):
     page = int(page)
 
     group = group_manager.get_group_by_id(debt.group_id)
-    last_page = int(ceil(len(group.user_list) / 5.0)) - 1
+    last_page = int(ceil(len(group.user_list) / UPPNT)) - 1
     next_page = last_page if page >= last_page else page + 1
 
     keyboard = []
-    for member in group.user_list[5 * page:5 + 5 * page]:
+    for member in group.user_list[UPPNT * page:UPPNT + UPPNT * page]:
         text = "⚪️" if member.id != debt.debtor else "🔘 ️"
         keyboard.append([InlineKeyboardButton(text + member.full_name_simple,
                                               callback_data="n_dbt_de_sel*%d*%d*%s" % (member.id,

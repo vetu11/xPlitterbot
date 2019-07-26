@@ -21,7 +21,7 @@ MINIMUN_REFRESH_RATE_TRANSACTION = 7776000  # 3 meses en segundos
 # Patrones de expresiones regulares
 RE_AMOUNT_COMMENT_PATTERN = r"\d+((\.|,)\d+)? (\w *)+"  # <amount> <comment>
 
-USERS_PER_PAGE_NEW_TRANSACTION = 10
+USERS_PER_PAGE_NEW_TRANSACTION = 5
 
 TRANSACTIONS_PER_PAGE_HISTORY = 5
 
