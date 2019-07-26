@@ -42,7 +42,6 @@ class Group:
 
     def refresh_expiration_date(self):
         # Aumenta la fecha de caducidad de un grupo cuando se usa.
-        self.check_duplicated_users()
         self.expiration_date += const.REFRESH_RATE_GRUPO
 
         if self.expiration_date < time.time() + const.MINIMUN_REFRESH_RATE_GRUPO:
@@ -148,16 +147,6 @@ class Group:
             return user
         self.user_list.append(user)
         return user
-
-    def check_duplicated_users(self):
-        """This is a workaround for a bug that was probably fixed unintentionally but we need to make sure this
-        doesn't happen again. It makes sure no user is duplicated."""
-
-        start_len = len(self.user_list)
-        self.user_list = list(set(self.user_list))
-        # Just to know the bug still happens, we send a message to the admin when it does happen.
-        if start_len != len(self.user_list):
-            const.aux.bot.send_message(const.VETU_ID, "Se han encontrado usuarios repetidos en %s" % self.title)
 
     def find_most_expensive_purchase(self):
         """Returns a dict with the comment and amount of the most expensive purchase of the group."""
