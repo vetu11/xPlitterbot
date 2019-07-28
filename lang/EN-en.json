@@ -5,7 +5,7 @@
   "more": "I've made more bots!\n\uD83C\uDDEA\uD83C\uDDF8 *Spanish only:*\n@Pilocobot es un juego picante para beber con tus amigos, o para conocer mejor a los nuevos en la fiesta\n@QuienVienebot es un bot integrado para saber rápidamente quienes y cuantos van a una quedada o evento.\n@SinSentidobot otro bot integrado con el que puedes decir cosas que parecen decir mucho pero no dicen nada en absoluto.",
   "not_found": "TEXT NOT FOUND",
   "donate": "Thanks for consider donating... Soon!",
-  "new_group": "*Hi! I am xPlitter!* I will be in charge of splitting the group expenses between you.\n\nTo add a new purchase use /add and follow the instructions!\n\nAs I cant's see who's on the chat, to be able to add you the purchases, I need you to press the button below:",
+  "new_group": "*Hi! I am xPlitter!* I will be in charge of splitting the group expenses between you.\n\nTo add a new purchase use /add and follow the instructions!\n\nAs I can't see who's on the chat, to be able to add you the purchases, I need you to press the button below:",
   "presentarse": "Say hi 👋",
   "hi": "Hi, {user_full_name_simple}, now I know you are in {group_name}",
   "word_help": "Help ❓",
