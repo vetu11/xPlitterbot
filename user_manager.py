@@ -19,10 +19,16 @@ class _UserManager:
         self.check_users_expiration_date()
 
     def check_users_expiration_date(self):
+
+        to_be_removed = []
+
         for user_id in self.user_dict:
             if self.user_dict[user_id].expiration_date < time.time():
-                self.user_dict.pop(user_id)
-    
+                to_be_removed.append(user_id)
+
+        for user_id in to_be_removed:
+            self.user_dict.pop(user_id)
+
     def get_user(self, user, user_data=None):
 
         if user_data is not None and "self" in user_data:

@@ -22,9 +22,14 @@ class _GroupManager:
     def check_groups_expiration_date(self):
         # Elimina de la lista los grupos cuya fecha de caducidad haya expirado.
 
+        to_be_removed = []
+
         for group_id in self.group_dict:
             if self.group_dict[group_id].expiration_date < time.time():
-                self.group_dict.pop(group_id)
+                to_be_removed.append(group_id)
+
+        for group_id in to_be_removed:
+            self.group_dict.pop(group_id)
 
     def get_group(self, chat, chat_data):
         # Devuelve la instacia del grupo correspondiente a la instancia de chat pasada.

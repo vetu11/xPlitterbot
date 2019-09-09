@@ -39,9 +39,14 @@ class _TransactionManager:
     def check_transactions_expiration_date(self):
         # Comprueba la fecha de caducidad de las transacciónes, y elimina las que estén caducadas.
 
+        to_be_removed = []
+
         for transaction_id in self.transaction_dict:
             if self.transaction_dict[transaction_id].expiration_date < time.time():
-                self.transaction_dict.pop(transaction_id)
+                to_be_removed.append(transaction_id)
+
+        for transaction_id in to_be_removed:
+            self.transaction_dict.pop(transaction_id)
 
     def get_transaction_by_id(self, transaction_id):
         # Devuelve la transacción con la id especificada.
