@@ -46,6 +46,7 @@ def main():
     a(CommandHandler('save', h.force_save))
     # MENSAJES
     a(MessageHandler(Filters.status_update.new_chat_members, h.new_members, pass_chat_data=True))
+    a(MessageHandler(Filters.status_update.left_chat_member, h.left_chat_members, pass_chat_data=True))
     a(MessageHandler(Filters.regex(pattern=const.RE_AMOUNT_COMMENT_PATTERN) & Filters.group,
                      callback=h.select_transaction_type_group,
                      pass_user_data=True))

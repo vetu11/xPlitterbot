@@ -19,9 +19,10 @@ from group_manager import group_manager
 from user_manager import user_manager
 from transaction_manager import transaction_manager
 
+UPPNT = const.USERS_PER_PAGE_NEW_TRANSACTION
+
 re_amount_comment = re.compile(const.RE_AMOUNT_COMMENT_PATTERN)
 
-UPPNT = const.USERS_PER_PAGE_NEW_TRANSACTION
 
 
 def _history_transactions_buttons(transaction_list, page):
@@ -293,18 +294,18 @@ def auto_save(*args, **kwargs):
 def new_members(bot, update, chat_data):
     # Cuando se añaden nuevos usuarios al grupo los añade a la instancia del grupo correspondiente. Si se ha añadido
     # al bot enviará un mensaje presentandose.
-
     t_users = update.effective_message.new_chat_members
     bot_id = const.aux.bot_id
     new_group = False
     group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
     lang = get_lang(group.lang)
 
     for user in t_users:
         if user.id == bot_id:
             new_group = True
         else:
-            group.add_telegram_user(update.effective_user)
+            group.add_telegram_user(user)
 
     if new_group:
         keyboard = [[InlineKeyboardButton(lang.get_text("presentarse"), callback_data="hi_group")]]
@@ -313,6 +314,15 @@ def new_members(bot, update, chat_data):
                                             reply_markup=InlineKeyboardMarkup(keyboard),
                                             reply=False,
                                             parse_mode=ParseMode.MARKDOWN)
+
+
+def left_chat_members(bot, update, chat_data):
+    bot_id = const.aux.bot_id
+    group = group_manager.get_group(update.effective_chat, chat_data)
+    group.add_telegram_user(update.effective_user)
+
+    if update.effective_message.left_chat_member.id != bot_id:
+        group.remove_telegram_user(update.effective_message.left_chat_member)
 
 
 def select_transaction_type_group(bot, update, user_data):

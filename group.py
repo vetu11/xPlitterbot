@@ -148,6 +148,12 @@ class Group:
         self.user_list.append(user)
         return user
 
+    def remove_telegram_user(self, telegram_user):
+        user = user_manager.get_user(telegram_user)
+
+        if user in self.user_list:
+            self.user_list.remove(user)
+
     def find_most_expensive_purchase(self):
         """Returns a dict with the comment and amount of the most expensive purchase of the group."""
 
