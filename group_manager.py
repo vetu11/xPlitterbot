@@ -17,7 +17,7 @@ class _GroupManager:
         for crude_group in crude_group_list:
             self.group_dict[crude_group["id"]] = Group(**dict(crude_group))
 
-        self.check_groups_expiration_date()
+        #self.check_groups_expiration_date()
 
     def check_groups_expiration_date(self):
         # Elimina de la lista los grupos cuya fecha de caducidad haya expirado.

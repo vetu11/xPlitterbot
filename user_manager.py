@@ -16,7 +16,7 @@ class _UserManager:
         for crude_user in crude_user_dict:
             self.user_dict[crude_user["id"]] = User(**crude_user)
 
-        self.check_users_expiration_date()
+        #self.check_users_expiration_date()
 
     def check_users_expiration_date(self):
 

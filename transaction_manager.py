@@ -18,7 +18,7 @@ class _TransactionManager:
             self.transaction_dict[crude_transaction["id"]] \
                 = self._create_transaction(crude_transaction["type"], **crude_transaction)
 
-        self.check_transactions_expiration_date()
+        #self.check_transactions_expiration_date()
 
     @staticmethod
     def _create_transaction(transaction_type, **kwargs):
